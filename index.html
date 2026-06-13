@@ -123,8 +123,11 @@
     font-size:.9rem; padding:2px 10px; background:#dcedff;
     border:2px solid #2a2a2a; border-radius:20px 6px 20px 6px/6px 20px 6px 20px;
   }
-  #summon-art { width:56px; margin-top:6px; }
-  #summon-name { font-size:.82rem; opacity:.7; }
+  #summon-list { }
+  .summon-chip { display:flex; flex-direction:column; align-items:center; cursor:pointer; transition:transform .1s; }
+  .summon-chip:hover { transform:scale(1.12) rotate(-3deg); }
+  .summon-chip .sc-art { width:50px; }
+  .summon-chip .sc-lv { font-size:.72rem; opacity:.7; margin-top:-2px; }
 
   .shake { animation:shake .18s; }
   @keyframes shake { 0%{transform:translate(3px,-2px) rotate(1deg);} 50%{transform:translate(-4px,2px) rotate(-1.5deg);} 100%{transform:none;} }
@@ -468,8 +471,7 @@
         <div class="stressbar"><div id="stress-fill" class="hpfill purple" style="width:0%"></div><div class="hptext" id="stress-text" style="line-height:12px;"></div></div>
         <div id="block-badge" style="display:none;"></div>
         <div id="player-buffs" style="font-size:.9rem; min-height:18px;"></div>
-        <div id="summon-art" class="wobble-slow" style="cursor:pointer;" title="คลิกเพื่อดู/เลี้ยงผู้ติดตาม" onclick="openSummonPanel()"></div>
-        <div id="summon-name" style="cursor:pointer;" onclick="openSummonPanel()"></div>
+        <div id="summon-list" style="display:flex; gap:8px; margin-top:6px; justify-content:center; flex-wrap:wrap;"></div>
       </div>
       <div id="enemy-side">
         <div id="enemy-row"></div>
@@ -1829,22 +1831,32 @@ const EVOLUTIONS = {
   demonking:  { name:'อัศวินมืดโล่ผนึก', icon:'🛡️', desc:'พลัง +15%, บล็อก +5% (สายโล่พิฆาต)', cards:['shieldBash'], summons:['golem2','knightShade'] },
 };
 
+function renderSummons(){
+  const wrap = $('summon-list');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  (S.summons || []).forEach((sm, i) => {
+    const sd = SUMMON_DEFS[sm.key];
+    const el = document.createElement('div');
+    el.className = 'summon-chip';
+    el.title = sm.name + ' Lv.' + sm.lv + ' — คลิกเพื่อเลี้ยง';
+    el.innerHTML = '<div class="sc-art wobble-slow">' + ART[sd.art] + '</div><div class="sc-lv">Lv.' + sm.lv + '</div>';
+    el.onclick = () => openSummonPanel(i);
+    wrap.appendChild(el);
+  });
+}
 function applyClassVisual(){
   const c = getClass();
   if (!c) return;
   const evo = S.evolved ? EVOLUTIONS[c.id] : null;
   $('hud-class').textContent = evo ? evo.name : c.name;
-  if (S.summon){
-    const sd = SUMMON_DEFS[S.summon.key];
-    $('summon-art').innerHTML = ART[sd.art];
-    $('summon-name').textContent = S.summon.name + ' Lv.' + S.summon.lv;
-  }
+  renderSummons();
 }
 function applyClass(c){
   S.classId = c.id;
   c.apply(S);
   c.cards.forEach(id => S.deck.push(id));
-  S.summon = newSummon(c.summonKey);
+  S.summons = [ newSummon(c.summonKey) ];
   applyClassVisual();
   if (!META.classesPlayed) META.classesPlayed = {};
   META.classesPlayed[c.id] = 1;
@@ -1859,14 +1871,14 @@ function showEvolution(done){
   const row = $('class-row');
   row.innerHTML = '';
   document.querySelector('#class-overlay h2').textContent = '🔱 วิวัฒนาการ Tier 2: ' + evo.name + '!';
-  document.querySelector('#class-overlay div').innerHTML = 'เซบาส: 「พลังบอสที่โค่นได้ปลุกสายเลือดขั้นถัดไป!<br>โปรดเลือกซัมมอนพิเศษคู่ใจ 1 ตน」 (' + evo.desc + ' + การ์ดใหม่)';
+  document.querySelector('#class-overlay div').innerHTML = 'เซบาส: 「พลังบอสที่โค่นได้ปลุกสายเลือดขั้นถัดไป!<br>โปรดเลือก<b>ซัมมอนพิเศษตัวที่สอง</b>มาร่วมทีม (ตัวเดิมยังอยู่ครบ!)」 (' + evo.desc + ' + การ์ดใหม่)';
   evo.summons.forEach(sk => {
     const sd = SUMMON_DEFS[sk];
     const el = document.createElement('div');
     el.className = 'pick-card';
     el.innerHTML = '<div class="icon">' + evo.icon + '</div><div class="cname">' + sd.name + '</div>' +
       '<div style="width:70px; margin:0 auto;">' + ART[sd.art] + '</div>' +
-      '<div class="cdesc">ซัมมอนพิเศษประจำ ' + evo.name + '</div>';
+      '<div class="cdesc">ซัมมอนพิเศษตัวที่ 2 ประจำ ' + evo.name + '<br>(เข้าร่วมทีมเพิ่ม ไม่แทนตัวเดิม)</div>';
     el.onclick = () => {
       beep(523,.12,'square',.06); setTimeout(()=>beep(784,.18,'square',.06), 140);
       showOverlay('class-overlay', false);
@@ -1878,16 +1890,13 @@ function showEvolution(done){
       if (c.id === 'dragonlord') S.crit = Math.min(.85, S.crit + .05);
       if (c.id === 'demonking') S.baseBlock = Math.min(.35, S.baseBlock + .05);
       evo.cards.forEach(id => S.deck.push(id));
-      const old = S.summon;
-      S.summon = newSummon(sk);
-      S.summon.xp = old ? old.xp : 0;
-      S.summon.lv = old ? old.lv : 1;
-      S.summon.mult = old ? old.mult : 1;
-      S.summon.abil = old ? old.abil.slice() : [];
+      // เพิ่มซัมมอนตัวที่สองเข้าทีม (ตัวเดิมยังอยู่)
+      if (!S.summons) S.summons = [];
+      S.summons.push(newSummon(sk));
       unlockAch('reincarnated');
       applyClassVisual();
       updateHud();
-      showToast('🔱 วิวัฒน์เป็น ' + evo.name + '! ได้การ์ด ' + getCard(evo.cards[0]).name);
+      showToast('🔱 วิวัฒน์เป็น ' + evo.name + '! ' + sd.name + ' เข้าร่วมทีม + การ์ด ' + getCard(evo.cards[0]).name);
       if (done) done();
     };
     row.appendChild(el);
@@ -1921,24 +1930,33 @@ function showClassSelect(){
   showOverlay('class-overlay', true);
 }
 
-// ---------- ซัมมอนออกโจมตี (VFX พุ่งเข้าใส่ + คลื่นกระแทก) ----------
-function summonStrike(){
-  if (!S.summon || !aliveEnemies().length) return;
-  const sm = S.summon;
+// ---------- ซัมมอนทั้งทีมออกโจมตีทีละตัว (VFX พุ่งเข้าใส่ + คลื่นกระแทก) ----------
+function summonPhase(onDone){
+  const list = (S.summons || []).filter(Boolean);
+  let i = 0;
+  function step(){
+    if (!S.inBattle){ return; }
+    if (!aliveEnemies().length){ winBattle(); return; }
+    if (i >= list.length){ onDone(); return; }
+    const sm = list[i++];
+    summonOneStrike(sm, () => setTimeout(step, 230));
+  }
+  step();
+}
+function summonOneStrike(sm, after){
   const sd = SUMMON_DEFS[sm.key];
   const t = curTarget();
-  if (!t) return;
+  if (!t){ after(); return; }
   fxSummonDash(sd, enemies.indexOf(t));
   setTimeout(() => {
-    if (!S.inBattle && !aliveEnemies().length) return;
+    if (!S.inBattle){ return; }
     const h = sd.hit(S);
     const hits = h.hits || 1;
     let total = 0;
-    for (let i = 0; i < hits; i++){
+    for (let k = 0; k < hits; k++){
       const targets = h.aoe ? aliveEnemies() : (curTarget() ? [curTarget()] : []);
       targets.forEach(e => {
         let d = h.dmg * sm.mult * (1 - (e.guardPct || 0)) * (e.debuffs.vuln > 0 ? 1.3 : 1);
-        if (h.crit) d *= 1; // คริของซัมมอนคิดมาแล้วใน dmg
         e.hp -= d;
         total += d;
         const ei = enemies.indexOf(e);
@@ -1946,7 +1964,6 @@ function summonStrike(){
         hitFlash('eart-' + ei);
         if (h.burn) applyDebuff(e, 'burn', h.burn);
         if (h.poison) applyDebuff(e, 'poison', h.poison);
-        // สกิลจากการเลี้ยง
         if (sm.abil.includes('venom')) applyDebuff(e, 'poison', 1);
         if (sm.abil.includes('blaze')) applyDebuff(e, 'burn', 1);
       });
@@ -1964,26 +1981,43 @@ function summonStrike(){
     beep(h.crit ? 700 : 460, .07, 'square', .05);
     setTimeout(()=>beep(220, .08, 'sawtooth', .04), 50);
     renderBattle();
-    if (!aliveEnemies().length) winBattle();
+    after();
   }, 420);
 }
 
-// ---------- เลี้ยงซัมมอน ----------
-function openSummonPanel(){
-  if (!S || !S.summon) return;
-  const sm = S.summon;
+// ---------- เลี้ยงซัมมอน (ทีมหลายตัว เลี้ยงแยกตัวได้) ----------
+let summonPanelIdx = 0;
+function openSummonPanel(idx){
+  if (!S || !S.summons || !S.summons.length) return;
+  if (typeof idx === 'number') summonPanelIdx = idx;
+  if (summonPanelIdx >= S.summons.length) summonPanelIdx = 0;
+  const sm = S.summons[summonPanelIdx];
   const sd = SUMMON_DEFS[sm.key];
   const next = summonNextLv(sm);
   let html = '<div style="width:90px; margin:0 auto;" class="wobble-slow">' + ART[sd.art] + '</div>' +
     '<div style="font-family:Mali; font-weight:700; font-size:1.2rem;">' + sm.name + ' — Lv.' + sm.lv + '</div>' +
     '<div style="opacity:.7;">พลังโจมตี ×' + sm.mult.toFixed(1) + ' · อิ่ม ' + sm.xp + (next ? '/' + next : ' (สูงสุด)') + '</div>' +
     '<div style="margin:8px 0;">สกิล: ' + (sm.abil.length ? sm.abil.map(a => SUMMON_ABIL[a].icon + ' ' + SUMMON_ABIL[a].name).join(' · ') : '— ยังไม่มี —') + ' (' + sm.abil.length + '/3' + (META.summonSlot3 ? '' : ' · ช่อง 3 ล็อก 🔒') + ')</div>' +
-    '<div style="opacity:.65; font-size:.9rem; margin-bottom:8px;">🍖 คลิกไอเทมในกระเป๋าเพื่อป้อน (+1 อิ่ม) — อิ่มครบแล้ววิวัฒน์ เลือกสกิลใหม่ได้</div>';
+    '<div style="opacity:.65; font-size:.9rem; margin-bottom:8px;">🍖 คลิกไอเทมในกระเป๋าเพื่อป้อนตัวนี้ (+1 อิ่ม) — อิ่มครบแล้ววิวัฒน์ เลือกสกิลใหม่ได้</div>';
   $('event-art').innerHTML = '';
-  $('event-title').textContent = '🐾 ผู้ติดตามคู่ใจ';
+  $('event-title').textContent = '🐾 ทีมผู้ติดตาม';
   $('event-desc').innerHTML = html;
   const box = $('event-choices');
   box.innerHTML = '';
+  // สลับเลือกตัวที่จะเลี้ยง (ถ้ามีหลายตัว)
+  if (S.summons.length > 1){
+    const sw = document.createElement('div');
+    sw.style.cssText = 'display:flex; gap:8px; justify-content:center; margin-bottom:6px; flex-wrap:wrap;';
+    S.summons.forEach((s2, j) => {
+      const sb = document.createElement('button');
+      sb.className = 'btn small';
+      sb.style.opacity = (j === summonPanelIdx) ? '1' : '.5';
+      sb.innerHTML = SUMMON_DEFS[s2.key].name + ' Lv.' + s2.lv;
+      sb.onclick = () => openSummonPanel(j);
+      sw.appendChild(sb);
+    });
+    box.appendChild(sw);
+  }
   S.items.forEach((it, i) => {
     const b = document.createElement('button');
     b.className = 'btn small';
@@ -2005,9 +2039,9 @@ function openSummonPanel(){
   showOverlay('event-overlay', true);
 }
 function feedSummon(i){
-  const sm = S.summon;
+  const sm = S.summons[summonPanelIdx];
   const next = summonNextLv(sm);
-  if (!next){ showToast('🐾 มันอิ่มจนไม่รับอะไรแล้ว!'); return; }
+  if (!next){ showToast('🐾 ' + sm.name + ' อิ่มจนไม่รับอะไรแล้ว!'); return; }
   S.items.splice(i, 1);
   sm.xp++;
   beep(520,.08,'square',.04);
@@ -2018,14 +2052,13 @@ function feedSummon(i){
     beep(523,.1,'square',.06); setTimeout(()=>beep(659,.12,'square',.06),110); setTimeout(()=>beep(784,.2,'square',.06),230);
     showToast('🐾 ' + sm.name + ' วิวัฒน์เป็น Lv.' + sm.lv + '!');
     applyClassVisual();
-    pickSummonAbility();
+    pickSummonAbility(sm);
     return;
   }
   updateHud();
   openSummonPanel();
 }
-function pickSummonAbility(){
-  const sm = S.summon;
+function pickSummonAbility(sm){
   const maxSlots = META.summonSlot3 ? 3 : 2;
   if (sm.abil.length >= maxSlots){ openSummonPanel(); return; }
   const avail = Object.keys(SUMMON_ABIL).filter(k => !sm.abil.includes(k));
@@ -2033,7 +2066,7 @@ function pickSummonAbility(){
   const p = avail.slice();
   for (let i = 0; i < 3 && p.length; i++) picks.push(p.splice(Math.floor(Math.random()*p.length), 1)[0]);
   $('event-art').innerHTML = '';
-  $('event-title').textContent = '✨ เลือกสกิลใหม่ให้ผู้ติดตาม';
+  $('event-title').textContent = '✨ เลือกสกิลใหม่ให้ ' + sm.name;
   $('event-desc').innerHTML = 'การวิวัฒน์ปลุกพลังแฝง... เลือก 1 สกิล (' + sm.abil.length + '/' + maxSlots + ' ช่อง)';
   const box = $('event-choices');
   box.innerHTML = '';
@@ -2090,7 +2123,7 @@ function newRunState(){
     maxEnergy: 3 + (META.rbEnergy||0), drawBonus: 0, baseBlock: 0, baseBlockFlat: 0,
     deck: ['strike','strike','strike','strike','guard','guard','calm'],
     items: [],
-    classId: null, evolved: false, summon: null,
+    classId: null, evolved: false, summons: [],
     eventBought: {},
     tutorialPending: false, everStress10: false, helpedVillager: false,
     // volatile battle state (not saved)
@@ -2139,7 +2172,12 @@ function continueRun(){
   enemies = [];
   appliedAct = 0;
   const c = CLASSES.find(x => x.id === S.classId);
-  if (c && !S.summon) S.summon = newSummon(c.summonKey); // เซฟเก่าไม่มีระบบเลี้ยงซัมมอน
+  // ย้ายเซฟเก่า: เดิมเก็บซัมมอนตัวเดียวใน S.summon → ทีม S.summons[]
+  if (!S.summons || !S.summons.length){
+    if (sv.S.summon) S.summons = [ sv.S.summon ];
+    else if (c) S.summons = [ newSummon(c.summonKey) ];
+    else S.summons = [];
+  }
   applyClassVisual();
   setBgm('normal');
   $('player-art').innerHTML = ART.darklord;
@@ -2406,7 +2444,7 @@ function startPlayerTurn(){
   S.blockFlat = S.baseBlockFlat || 0;
   S.buffs.momentum = 0;
   // สกิลซัมมอน "พิทักษ์": ได้เกราะ flat ทุกเทิร์น
-  if (S.summon && S.summon.abil.includes('guard')) S.blockFlat += 4;
+  (S.summons || []).forEach(sm => { if (sm.abil.includes('guard')) S.blockFlat += 4; });
   drawCards(5 + S.drawBonus);
   if (S.skipTurn){
     S.skipTurn = false;
@@ -2563,13 +2601,15 @@ function endTurn(fromSkip){
   });
   S.discardPile = S.discardPile.concat(keep);
   S.hand = [];
-  // ซัมมอนออกโจมตี
-  summonStrike();
-  if (!aliveEnemies().length){ winBattle(); return; }
-  if (!S.inBattle) return;
-  banner('⏳ ตาของศัตรู...');
   renderHand();
-  setTimeout(()=>enemyActAll(0), 800);
+  if (!aliveEnemies().length){ winBattle(); return; }
+  // ซัมมอนทั้งทีมออกโจมตีทีละตัว แล้วค่อยถึงตาศัตรู
+  banner('🐾 ทีมผู้ติดตามบุก!');
+  summonPhase(() => {
+    if (!S.inBattle) return;
+    banner('⏳ ตาของศัตรู...');
+    setTimeout(()=>enemyActAll(0), 500);
+  });
 }
 
 function enemyHit(e, raw){
@@ -2766,7 +2806,7 @@ function winBattle(){
   S.gold += g;
   const heal = Math.ceil(8 + S.node);
   S.hp = Math.min(S.maxHp, S.hp + heal);
-  addStress(S.summon && S.summon.abil.includes('fluffy') ? -2 : -1);
+  addStress((S.summons || []).some(sm => sm.abil.includes('fluffy')) ? -2 : -1);
   beep(520, .1, 'square', .05); setTimeout(()=>beep(700, .15, 'square', .05), 100);
   if (g > 0) spawnText($('battle-area'), '+' + fmt(g) + ' 💰', null, 'heal', .6, .2);
   // item drops ตามระดับมอนสเตอร์
@@ -3127,7 +3167,7 @@ function openStatus(){
   const c = getClass();
   const rows = [
     ['🎭 อาชีพ', c ? c.name : '-'],
-    ['🐾 ผู้ติดตาม', c ? c.summon.name : '-'],
+    ['🐾 ทีมผู้ติดตาม', (S.summons && S.summons.length) ? S.summons.map(sm => sm.name + ' Lv.' + sm.lv).join(', ') : '-'],
     ['⚔️ พลังโจมตี', fmt(S.power)],
     ['❤️ เลือด', fmt(S.hp) + ' / ' + fmt(S.maxHp)],
     [stressFace() + ' ความเครียด', S.stress + '/10' + (S.stress >= 5 ? ' <span style="color:#b3322b">(รับดาเมจ +15%!)</span>' : '')],
@@ -3727,21 +3767,7 @@ const ACT_EVENTS = {
   5: [eventJudgment, eventPurify],
 };
 
-function eventTemple(){
-  const others = CLASSES.filter(c => c.id !== S.classId);
-  renderEvent(ART.temple, '🎭 วิหารแห่งการกลับชาติ',
-    'เงาของจอมมารรุ่นก่อนๆ ล่องลอยอยู่รอบแท่นพิธี...<br>「ผู้สืบทอด... อยากลองเดินสายอื่นดูไหม?<br>เปลี่ยนตอนนี้ รับพรและการ์ดของสายใหม่ไปด้วยเลย」',
-    others.map(c => ({ label: c.icon + ' เปลี่ยนเป็น ' + c.name, fn: () => {
-        beep(260, .25, 'sawtooth', .06);
-        applyClass(c);
-        unlockAch('reincarnated');
-        eventResult(ART.temple, '🎭 กลับชาติสำเร็จ!',
-          'เปลวไฟสีม่วงห่อหุ้มร่างเจ้า...<br>เจ้าได้กลายเป็น <b>' + c.name + '</b>!<br>' + c.summon.name + ' ปรากฏตัวเคียงข้าง และการ์ดประจำสายถูกเพิ่มเข้าเด็ค ✨<br>(' + c.bonus + ')');
-      } })).concat([
-      { label:'🚶 ข้าพอใจกับสายเดิม', fn: () => eventResult(ART.temple, '🎭 วิหารแห่งการกลับชาติ', 'เงาจอมมารพยักหน้าช้าๆ...<br>「ความมั่นคงก็คือพลังอย่างหนึ่ง... ไปเถิด」') }
-    ])
-  );
-}
+// (อีเวนต์เปลี่ยนอาชีพกลางทางถูกถอดออกแล้ว — มีแต่การวิวัฒน์ Tier 2 ที่เพิ่มซัมมอนตัวที่ 2)
 
 // ============================================================
 // ITEMS UI
@@ -3909,6 +3935,7 @@ function updateHud(){
   $('hud-deck').textContent = S.deck.length;
   $('progress-dot').style.left = ((S.node-1)/(TOTAL_NODES-1)*96) + '%';
   $('unseal-btn').style.opacity = S.unseal > 0 ? 1 : .35;
+  renderSummons();
   renderBattle();
   renderItems();
 }
