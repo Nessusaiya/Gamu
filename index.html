@@ -405,6 +405,12 @@
   .talent-card .tn { font-family:'Mali',cursive; font-weight:700; margin:2px 0; }
   .talent-card .td { font-size:.85rem; opacity:.78; line-height:1.4; margin-bottom:8px; min-height:48px; }
   .talent-card .tlv { font-size:.8rem; color:#b3322b; margin-bottom:6px; }
+  .talent-ultimate { width:300px; border-color:#a8791a; background:#fff8e6;
+    box-shadow:3px 4px 0 #a8791a44, 0 0 18px 2px #e7b73c88; animation:thronePulse 1.6s ease-in-out infinite; }
+  @keyframes thronePulse { 0%,100%{ box-shadow:3px 4px 0 #a8791a44, 0 0 14px 1px #e7b73c66; } 50%{ box-shadow:3px 4px 0 #a8791a44, 0 0 26px 5px #e7b73c; } }
+  .talent-ultimate .ti { font-size:2.3rem; }
+  .talent-ultimate .tn { color:#a8791a; font-size:1.15rem; }
+  .talent-ultimate .td { min-height:62px; }
   .end-stats { display:inline-block; text-align:left; padding:14px 26px; margin:14px 0; font-size:1.08rem; line-height:1.9; }
   .shop-row { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin:14px 0 20px; }
   .shop-item { width:185px; padding:12px; text-align:center; }
@@ -1182,7 +1188,8 @@ function hashPw(s){
   for (let i=0;i<s.length;i++){ h = ((h<<5)+h+s.charCodeAt(i))|0; }
   return 'h'+(h>>>0).toString(36);
 }
-function defaultMeta(){ return { shards:0, pLv:0, hLv:0, uLv:0, gLv:0, wins:0, runs:0, tutorialDone:false, ach:{}, classesPlayed:{}, totalKills:0, rbPts:0, rbAtk:0, rbEnergy:0, summonSlot3:false, maxDiff:0 }; }
+function defaultMeta(){ return { shards:0, pLv:0, hLv:0, uLv:0, gLv:0, wins:0, runs:0, tutorialDone:false, ach:{}, classesPlayed:{}, totalKills:0, rbPts:0, rbAtk:0, rbEnergy:0, summonSlot3:false, maxDiff:0,
+  critLv:0, blockLv:0, armorLv:0, calmLv:0, goldStartLv:0, itemStartLv:0, summonLv:0, handLv:0, throneLv:0 }; }
 function acct(){ return DB.users[USER]; }
 
 function loginMsg(t){ $('login-msg').textContent = t || ''; }
@@ -1669,7 +1676,8 @@ const ACH = [
   { id:'summon-evolve', icon:'🐾', name:'เลี้ยงจนโต', desc:'เลี้ยงผู้ติดตามจนวิวัฒน์ Lv.2' },
   { id:'summon-max', icon:'🌟', name:'สหายร่วมรบสมบูรณ์แบบ', desc:'ผู้ติดตามมีสกิลครบ 3 ช่อง' },
   { id:'epic-card', icon:'💜', name:'นักสะสมของหายาก', desc:'ได้การ์ดระดับ Epic เข้าเด็ค' },
-  { id:'rebirth-shop', icon:'🔁', name:'เกิดใหม่แกร่งกว่าเดิม', desc:'ซื้อพรแห่งการเกิดใหม่ครั้งแรก' },
+  { id:'rebirth-shop', icon:'🏰', name:'นายช่างปราสาท', desc:'อัปเกรดทาเลนต์ที่ปราสาทจอมมารครั้งแรก' },
+  { id:'throne-built', icon:'👑', name:'พลังที่แท้จริงคืนมา!', desc:'สร้าง "บัลลังก์พลังนิรันดร์" ขั้นสูงสุด (ฟาร์มมหาโหด!)' },
   { id:'nightmare-clear', icon:'😱', name:'ฝ่าฝันร้าย', desc:'ครองโลกสำเร็จในโหมดฝันร้าย' },
   { id:'hell-clear', icon:'🔥', name:'ราชันแห่งนรก', desc:'ครองโลกสำเร็จในโหมดนรก' },
   { id:'poison-master', icon:'☠️', name:'นักปรุงพิษ', desc:'สะสมพิษใส่ศัตรูตัวเดียว 10 สแตคขึ้นไป' },
@@ -1926,7 +1934,9 @@ function applyClass(c){
   c.apply(S);
   c.cards.forEach(id => S.deck.push(id));
   if (c.genCard) S.deck.push(c.genCard); // การ์ดสกิลหลอมประจำสาย
-  S.summons = [ newSummon(c.summonKey) ];
+  const sm0 = newSummon(c.summonKey);
+  for (let i = 0; i < (META.summonLv||0) && sm0.lv < 3; i++){ sm0.lv++; sm0.mult += (sm0.lv === 2 ? .4 : .6); }
+  S.summons = [ sm0 ];
   applyClassVisual();
   if (!META.classesPlayed) META.classesPlayed = {};
   META.classesPlayed[c.id] = 1;
@@ -2180,21 +2190,26 @@ const ENEMY_POOLS = [
 ];
 
 function newRunState(){
+  const thr = META.throneLv || 0;                        // บัลลังก์: +20% พลัง & +30 เลือด ต่อขั้น
+  const baseHp = 100 + 20*META.hLv + 30*thr;
+  const startItems = [];
+  for (let i = 0; i < (META.itemStartLv||0); i++) startItems.push(pick(ITEM_KEYS));
   return {
     node: 1,
-    power: Math.ceil(10 * (1 + 0.15*META.pLv + 0.02*(META.rbAtk||0))),
-    maxHp: 100 + 20*META.hLv,
-    hp: 100 + 20*META.hLv,
-    gold: 0,
+    power: Math.ceil(10 * (1 + 0.15*META.pLv + 0.02*(META.rbAtk||0)) * (1 + 0.2*thr)),
+    maxHp: baseHp,
+    hp: baseHp,
+    gold: 50*(META.goldStartLv||0),
     unseal: 1 + META.uLv,
-    crit: 0.05, critMul: 3,
+    crit: 0.05 + 0.02*(META.critLv||0), critMul: 3,
     lifesteal: 0, goldMul: 1 + 0.1*(META.gLv||0),
     kills: 0,
-    stress: 0, stressGuard: 0,
+    stress: 0, stressGuard: (META.calmLv||0),
     battles: 0, lastCampAt: 0, lastShopAt: 0,
-    maxEnergy: 3 + (META.rbEnergy||0), drawBonus: 0, baseBlock: 0, baseBlockFlat: 0,
+    maxEnergy: 3 + (META.rbEnergy||0), drawBonus: (META.handLv||0),
+    baseBlock: Math.min(.3, 0.04*(META.blockLv||0)), baseBlockFlat: 2*(META.armorLv||0),
     deck: ['strike','strike','strike','strike','guard','guard','calm'],
-    items: [],
+    items: startItems,
     classId: null, evolved: false, summons: [], diff: PENDING_DIFF,
     eventBought: {},
     tutorialPending: false, everStress10: false, helpedVillager: false,
@@ -2446,7 +2461,9 @@ function startBattle(tier, overrides){
     S.keepBanner = true;
     beep(880, .12, 'square', .05); setTimeout(()=>beep(1100,.15,'square',.05), 130);
   } else if (lead.isBoss && S.node === TOTAL_NODES){
-    banner('⛔ บอสต้านทานการปลดผนึก — โค่นนางด้วยพลังแท้จริงของเจ้า!!');
+    banner((META.throneLv||0) >= 3
+      ? '👑 บัลลังก์พลังนิรันดร์ตื่นแล้ว — ปลดผนึกใส่เทพธิดาได้!!'
+      : '⛔ บอสต้านทานการปลดผนึก — โค่นนางด้วยพลังแท้จริงของเจ้า!!');
     S.keepBanner = true;
   }
   if (lead.isBoss){
@@ -3030,8 +3047,8 @@ function stressFace(){
 // ---------- unseal ----------
 function useUnseal(){
   if (!S || !S.inBattle || !S.playerTurn || S.unseal <= 0) return;
-  // บอสมีผนึกศักดิ์สิทธิ์ — ปลดผนึกใช้ไม่ได้!
-  if (aliveEnemies().some(e => e.isBoss)){
+  // บอสมีผนึกศักดิ์สิทธิ์ — ปลดผนึกใช้ไม่ได้! (ยกเว้นปลดล็อก "บัลลังก์พลังนิรันดร์" ขั้นสูงสุด)
+  if (aliveEnemies().some(e => e.isBoss) && (META.throneLv||0) < 3){
     banner('⛔ ผนึกศักดิ์สิทธิ์ของบอสต้านทานการปลดผนึก!!');
     beep(110, .3, 'sawtooth', .06);
     shakeHard();
@@ -4374,21 +4391,43 @@ function victory(){
 // 🏰 ปราสาทจอมมาร (Overlord's Castle) — ฐาน/ทาเลนต์ถาวร ใช้ "วิญญาณ" (META.shards)
 // ============================================================
 // ทาเลนต์จัดกลุ่มเป็นต้นไม้พลัง — ทุกอย่างจ่ายด้วยวิญญาณสกุลเดียว
+const THRONE_COSTS = [3000, 8000, 20000];
+const THRONE_DESC = [
+  'ขั้น 1: พลังเริ่มต้น +20%, เลือด +30',
+  'ขั้น 2: พลังเริ่มต้น +40%, เลือด +60',
+  '👑 ขั้นสูงสุด: พลัง +60%, เลือด +90<br><b style="color:#b3322b;">+ ปลดผนึก 999,999,999 ใช้กับ "บอส" ได้!!</b>',
+];
 const CASTLE_TALENTS = [
-  { group:'⚔️ สายโจมตี', items:[
+  { group:'⚔️ หอฝึกอาวุธ (โจมตี)', items:[
     { key:'pLv', icon:'⚔️', name:'พลังมารแต่กำเนิด', desc:'พลังเริ่มต้น +15% ต่อเลเวล', cost:()=>15 + META.pLv*12, max:99 },
     { key:'rbAtk', icon:'🗡️', name:'คมเขี้ยวมาร', desc:'พลังเริ่มต้น +2% ต่อเลเวล (ปรับละเอียด)', cost:()=>8 + (META.rbAtk||0)*5, max:50 },
+    { key:'critLv', icon:'👁️', name:'ดวงตาปีศาจ', desc:'โอกาสคริติคอลเริ่มต้น +2% ต่อเลเวล', cost:()=>50 + (META.critLv||0)*40, max:10 },
   ]},
-  { group:'❤️ สายความอึด', items:[
+  { group:'🛡️ กำแพงปราการ (ป้องกัน)', items:[
+    { key:'blockLv', icon:'🧱', name:'ผิวหนังอสูร', desc:'บล็อกพื้นฐานทุกเทิร์น +4% ต่อเลเวล', cost:()=>40 + (META.blockLv||0)*30, max:5 },
+    { key:'armorLv', icon:'🪨', name:'เกราะกระดูกมังกร', desc:'กันดาเมจพื้นฐานทุกเทิร์น +2 หน่วย ต่อเลเวล', cost:()=>35 + (META.armorLv||0)*25, max:5 },
+  ]},
+  { group:'❤️ วิหารชีวิต (ความอึด)', items:[
     { key:'hLv', icon:'❤️', name:'ร่างอมตะ', desc:'เลือดสูงสุดเริ่มต้น +20 ต่อเลเวล', cost:()=>15 + META.hLv*12, max:99 },
+    { key:'calmLv', icon:'🍵', name:'จิตเหล็กจอมมาร', desc:'เครียดที่ได้รับ -1 ต่อเลเวล (เริ่มเกมติดตัว)', cost:()=>140 + (META.calmLv||0)*140, max:2 },
   ]},
-  { group:'💰 สายทรัพย์ศฤงคาร', items:[
+  { group:'💰 ท้องพระคลัง (ทรัพย์)', items:[
     { key:'gLv', icon:'👑', name:'มงกุฎโลภะ', desc:'อัตราดรอปทอง +10% ต่อเลเวล', cost:()=>20 + (META.gLv||0)*15, max:5 },
+    { key:'goldStartLv', icon:'💰', name:'ถุงทองมรดก', desc:'เริ่มเกมมีทองติดตัว +50 ต่อเลเวล', cost:()=>25 + (META.goldStartLv||0)*20, max:5 },
+    { key:'itemStartLv', icon:'🎒', name:'เสบียงมรดก', desc:'เริ่มเกมมีไอเทมสุ่มติดตัว +1 ต่อเลเวล', cost:()=>80 + (META.itemStartLv||0)*60, max:3 },
   ]},
-  { group:'🔮 สายพลังลับ & ปลดล็อก', items:[
+  { group:'🐾 คอกอสูรรับใช้ (ผู้ติดตาม)', items:[
+    { key:'summonLv', icon:'🐾', name:'สายเลือดผู้ติดตาม', desc:'ผู้ติดตามเริ่มต้นที่เลเวล +1 ต่อเลเวล (แรงขึ้น)', cost:()=>250 + (META.summonLv||0)*250, max:2 },
+    { key:'summonSlot3', icon:'🌟', name:'พันธสัญญาลึก', desc:'ปลดล็อกช่องสกิลที่ 3 ของผู้ติดตาม (ทรงพลัง!)', cost:()=>300, max:1, bool:true },
+  ]},
+  { group:'🔮 หอเวทมนตร์ลับ', items:[
     { key:'uLv', icon:'🔮', name:'รอยร้าวของผนึก', desc:'เริ่มเกมพร้อม "ปลดผนึก" +1', cost:()=>120 + META.uLv*120, max:2 },
-    { key:'rbEnergy', icon:'⚡', name:'แก่นพลังงานมาร', desc:'พลังงานสูงสุดเริ่มต้น +1', cost:()=>150 + (META.rbEnergy||0)*150, max:2 },
-    { key:'summonSlot3', icon:'🌟', name:'พันธสัญญาลึก', desc:'ปลดล็อกช่องสกิลที่ 3 ของผู้ติดตาม (ทรงพลัง!)', cost:()=>250, max:1, bool:true },
+    { key:'rbEnergy', icon:'⚡', name:'แก่นพลังงานมาร', desc:'พลังงานสูงสุดเริ่มต้น +1', cost:()=>200 + (META.rbEnergy||0)*200, max:2 },
+    { key:'handLv', icon:'🃏', name:'ญาณทิพย์มาร', desc:'จั่วการ์ดเพิ่ม +1 ใบทุกเทิร์น (ทรงพลังมาก!)', cost:()=>500, max:1 },
+  ]},
+  { group:'👑 ★ บัลลังก์พลังนิรันดร์ ★ (รางวัลสุดยอด — ฟาร์มหนัก!)', ultimate:true, items:[
+    { key:'throneLv', icon:'👑', name:'บัลลังก์พลังนิรันดร์', descFn:()=>THRONE_DESC[Math.min(META.throneLv||0, 2)], ultimate:true,
+      cost:()=>THRONE_COSTS[META.throneLv||0], max:3 },
   ]},
 ];
 function talentLevel(it){ return it.bool ? (META[it.key] ? 1 : 0) : (META[it.key]||0); }
@@ -4414,22 +4453,25 @@ function renderCastle(){
       const maxed = lvl >= it.max;
       const cost = it.cost();
       const lvlTxt = it.bool ? (lvl ? 'ปลดล็อกแล้ว ✅' : 'ยังไม่ปลดล็อก') : ('เลเวล ' + lvl + '/' + it.max);
+      const desc = it.descFn ? it.descFn() : it.desc;
       const el = document.createElement('div');
-      el.className = 'talent-card shop-item sketch';
+      el.className = 'talent-card shop-item sketch' + (it.ultimate ? ' talent-ultimate' : '');
       el.innerHTML = '<div class="ti">'+it.icon+'</div><div class="tn">'+it.name+'</div>' +
-        '<div class="td">'+it.desc+'</div><div class="tlv">'+lvlTxt+'</div>';
+        '<div class="td">'+desc+'</div><div class="tlv">'+lvlTxt+'</div>';
       const b = document.createElement('button');
       b.className = 'btn';
       b.style.fontSize = '.95rem';
-      b.textContent = maxed ? 'สูงสุดแล้ว!' : '💜 ' + cost;
+      b.textContent = maxed ? 'สูงสุดแล้ว!' : '💜 ' + fmt(cost);
       b.disabled = maxed || META.shards < cost;
       b.onclick = () => {
         META.shards -= cost;
         if (it.bool) META[it.key] = true;
         else META[it.key] = (META[it.key]||0) + 1;
         unlockAch('rebirth-shop');
+        if (it.key === 'throneLv' && META.throneLv >= 3) unlockAch('throne-built');
         saveMeta();
-        beep(600,.1,'square'); setTimeout(()=>beep(820,.1,'square',.05), 80);
+        if (it.ultimate){ beep(330,.18,'sawtooth',.07); setTimeout(()=>beep(523,.15,'square',.07),160); setTimeout(()=>beep(784,.15,'square',.07),320); setTimeout(()=>beep(1047,.4,'square',.07),470); }
+        else { beep(600,.1,'square'); setTimeout(()=>beep(820,.1,'square',.05), 80); }
         renderCastle();
       };
       el.appendChild(b);
