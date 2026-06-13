@@ -576,8 +576,10 @@
       โลกทั้งใบหมอบราบใต้เงาของเจ้า 😈
     </div>
     <div class="end-stats sketch" id="victory-stats"></div>
-    <button class="btn" onclick="openRebirth()">🔁 ร้านพรแห่งการเกิดใหม่ (+8 แต้ม!)</button>
-    <div style="height:10px;"></div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-bottom:10px;">
+      <button class="btn" onclick="openDeckTrim()">✂️ ตัดเด็ค (รางวัล)</button>
+      <button class="btn" onclick="openRebirth()">🔁 ร้านพรเกิดใหม่</button>
+    </div>
     <button class="btn big" onclick="newGameNow()">🌍 ครองโลกอีกรอบ (เล่นใหม่)</button>
   </div>
 
@@ -1128,7 +1130,7 @@ function hashPw(s){
   for (let i=0;i<s.length;i++){ h = ((h<<5)+h+s.charCodeAt(i))|0; }
   return 'h'+(h>>>0).toString(36);
 }
-function defaultMeta(){ return { shards:0, pLv:0, hLv:0, uLv:0, wins:0, runs:0, tutorialDone:false, ach:{}, classesPlayed:{}, totalKills:0, rbPts:0, rbAtk:0, rbEnergy:0, summonSlot3:false }; }
+function defaultMeta(){ return { shards:0, pLv:0, hLv:0, uLv:0, wins:0, runs:0, tutorialDone:false, ach:{}, classesPlayed:{}, totalKills:0, rbPts:0, rbAtk:0, rbEnergy:0, summonSlot3:false, maxDiff:0 }; }
 function acct(){ return DB.users[USER]; }
 
 function loginMsg(t){ $('login-msg').textContent = t || ''; }
@@ -1438,6 +1440,16 @@ const CARD_DEFS = {
   shieldBash:  { icon:'🛡️', name:'โล่พิฆาต', cost:2, type:'atk', rarity:'epic', desc:'ดาเมจ 100% +500% ของ %บล็อกปัจจุบัน', dmg:1.0, blockScale:true,
                  ups:[ { name:'โล่พิพากษา', desc:'ดาเมจ 180% +สเกลบล็อก', dmg:1.8 },
                        { name:'โล่สะท้านปฐพี', desc:'ดาเมจ 100% +สเกล + เปราะบาง 1', vuln:1 } ] },
+  // ---- การ์ดสกิลหลอมการ์ดสถานะ (มีกลไกทอยเต๋าพลาด!) ----
+  brewPoison:  { icon:'⚗️', name:'หลอมยาพิษ', cost:1, type:'skill', rarity:'common', desc:'ทอยเต๋า: หลอม "ขวดยาพิษ" 2-3 ใบ (เสี่ยงพลาด!)', create:{ card:'poisonVial', min:2, max:3, dud:'spoiledBrew' },
+                 ups:[ { name:'หลอมยาพิษเข้มข้น', desc:'หลอมขวดยาพิษ 3-4 ใบ (เสี่ยงพลาด)', create:{ card:'poisonVial', min:3, max:4, dud:'spoiledBrew' } },
+                       { name:'สูตรพิษมั่นคง', desc:'หลอมขวดยาพิษ 2-3 ใบ (พลาดยากขึ้น)', create:{ card:'poisonVial', min:2, max:3, dud:'spoiledBrew', safe:true } } ] },
+  poisonVial:  { icon:'🧪', name:'ขวดยาพิษ', cost:0, type:'atk', rarity:'common', desc:'ดาเมจ 30% + พิษ 2 (การ์ดหลอม ชั่วคราว)', dmg:.3, poison:2 },
+  stokeEmber:  { icon:'⚗️', name:'เพาะเพลิงนรก', cost:1, type:'skill', rarity:'common', desc:'ทอยเต๋า: หลอม "ขวดเพลิง" 2-3 ใบ (เสี่ยงพลาด!)', create:{ card:'emberVial', min:2, max:3, dud:'spoiledBrew' },
+                 ups:[ { name:'เพาะเพลิงมหากาฬ', desc:'หลอมขวดเพลิง 3-4 ใบ (เสี่ยงพลาด)', create:{ card:'emberVial', min:3, max:4, dud:'spoiledBrew' } },
+                       { name:'สูตรเพลิงมั่นคง', desc:'หลอมขวดเพลิง 2-3 ใบ (พลาดยากขึ้น)', create:{ card:'emberVial', min:2, max:3, dud:'spoiledBrew', safe:true } } ] },
+  emberVial:   { icon:'🔥', name:'ขวดเพลิง', cost:0, type:'atk', rarity:'common', desc:'ดาเมจ 30% + ไฟลวก 2 (การ์ดหลอม ชั่วคราว)', dmg:.3, burn:2 },
+  spoiledBrew: { icon:'🤢', name:'ยาเสื่อม', cost:0, type:'curse', desc:'หลอมพลาด! เล่นทิ้งฟรี / ค้างมือ: เครียด +1 แล้วสลาย', selfStress:1 },
   // ---- การ์ดขยะ (ศัตรูยัดใส่ — ค้างมือตอนจบเทิร์น = ออกฤทธิ์แล้วสลาย) ----
   slimeGoo:    { icon:'🟢', name:'เมือกเหนียว', cost:0, type:'curse', desc:'เล่นเพื่อทิ้ง / ค้างมือ: เครียด +1 แล้วสลาย' },
   confusion:   { icon:'💫', name:'มึนงง', cost:1, type:'curse', desc:'เปลือง ⚡1 ทิ้ง / ค้างมือ: เครียด +1 แล้วสลาย' },
@@ -1605,6 +1617,10 @@ const ACH = [
   { id:'summon-max', icon:'🌟', name:'สหายร่วมรบสมบูรณ์แบบ', desc:'ผู้ติดตามมีสกิลครบ 3 ช่อง' },
   { id:'epic-card', icon:'💜', name:'นักสะสมของหายาก', desc:'ได้การ์ดระดับ Epic เข้าเด็ค' },
   { id:'rebirth-shop', icon:'🔁', name:'เกิดใหม่แกร่งกว่าเดิม', desc:'ซื้อพรแห่งการเกิดใหม่ครั้งแรก' },
+  { id:'nightmare-clear', icon:'😱', name:'ฝ่าฝันร้าย', desc:'ครองโลกสำเร็จในโหมดฝันร้าย' },
+  { id:'hell-clear', icon:'🔥', name:'ราชันแห่งนรก', desc:'ครองโลกสำเร็จในโหมดนรก' },
+  { id:'poison-master', icon:'☠️', name:'นักปรุงพิษ', desc:'สะสมพิษใส่ศัตรูตัวเดียว 10 สแตคขึ้นไป' },
+  { id:'alchemist', icon:'⚗️', name:'นักเล่นแร่แปรธาตุ', desc:'หลอมการ์ดสถานะสำเร็จครั้งแรก' },
 ];
 let achQueue = [];
 let achShowing = false;
@@ -1755,10 +1771,10 @@ const SUMMON_DEFS = {
   // พื้นฐานประจำอาชีพ
   skeleton: { name:'🦴 อัศวินกระดูก', art:'skeleton', hit:s=>({ dmg:s.power*1.0, label:'🦴' }) },
   imp:      { name:'🔥 อิมป์เพลิงนรก', art:'imp', hit:s=>({ dmg:s.power*.8, label:'🔥', burn:1 }) },
-  bats:     { name:'🦇 ฝูงค้างคาวเลือด', art:'bats', hit:s=>({ dmg:s.power*.7, label:'🦇', healPct:.5 }) },
-  zombie:   { name:'🧟 ซอมบี้ผู้ภักดี', art:'zombie', hit:s=>({ dmg:s.power*Math.min(2.5, .5 + s.kills*.03), label:'🧟' }) },
-  whelp:    { name:'🐉 ลูกมังกรทมิฬ', art:'whelp', hit:s=>{ const big = Math.random()<.5; return { dmg:s.power*(big?1.8:.6), label:big?'🔥':'🐉', crit:big }; } },
-  golem:    { name:'🗿 โกเลมโล่หิน', art:'golem', hit:s=>({ dmg:s.power*.7, label:'🗿', blockFlat:4 }) },
+  bats:     { name:'🦇 ฝูงค้างคาวเลือด', art:'bats', hit:s=>({ dmg:s.power*.85, label:'🦇', healPct:.65 }) },
+  zombie:   { name:'🧟 ซอมบี้ผู้ภักดี', art:'zombie', hit:s=>({ dmg:s.power*Math.min(2.6, .7 + s.kills*.03), label:'🧟' }) },
+  whelp:    { name:'🐉 ลูกมังกรทมิฬ', art:'whelp', hit:s=>{ const big = Math.random()<.5; return { dmg:s.power*(big?1.8:.7), label:big?'🔥':'🐉', crit:big }; } },
+  golem:    { name:'🗿 โกเลมโล่หิน', art:'golem', hit:s=>({ dmg:s.power*.85, label:'🗿', blockFlat:5 }) },
   // ซัมมอนพิเศษ Tier 2 (เลือก 1 ตอนวิวัฒน์ — เอกลักษณ์คนละแบบ)
   hound:    { name:'🐺 เฮลฮาวด์', art:'whelp', hit:s=>({ dmg:s.power*1.6, label:'🐺' }) },
   valkyrie: { name:'🪽 วาลคีรีมืด', art:'angel', hit:s=>({ dmg:s.power*.6, label:'🪽', aoe:true }) },
@@ -1799,17 +1815,17 @@ const CLASSES = [
     cards:['warSlash','rage'], summonKey:'skeleton',
     apply:s=>{ s.power = Math.ceil(s.power*1.25); s.maxHp += 15; s.hp += 15; } },
   { id:'sorcerer', icon:'🔥', name:'จอมมารจอมเวท',
-    bonus:'จั่ว +1 ใบ/เทิร์น · คอมโบ: ไฟลวก & ระเบิด',
-    cards:['fireRain','ignite'], summonKey:'imp',
+    bonus:'จั่ว +1 ใบ/เทิร์น · คอมโบ: ไฟลวก & หลอมขวดเพลิง',
+    cards:['fireRain','ignite'], genCard:'stokeEmber', summonKey:'imp',
     apply:s=>{ s.drawBonus += 1; } },
   { id:'vampire', icon:'🦇', name:'จอมมารแวมไพร์',
-    bonus:'ดูดเลือด 4% · คอมโบ: ฮีลล้น → พลังเดือด',
+    bonus:'ดูดเลือด 6% · คอมโบ: ฮีลล้น → พลังเดือด',
     cards:['bloodBite','bloodPact'], summonKey:'bats',
-    apply:s=>{ s.lifesteal += 0.04; } },
+    apply:s=>{ s.lifesteal += 0.06; } },
   { id:'necro', icon:'💀', name:'จอมมารเนโครแมนเซอร์',
-    bonus:'ทอง +20% · คอมโบ: พิษ & สเกลสังหาร',
-    cards:['corpseWave','harvest'], summonKey:'zombie',
-    apply:s=>{ s.goldMul *= 1.2; } },
+    bonus:'ทอง +25% · คอมโบ: พิษ & หลอมยาพิษ',
+    cards:['corpseWave','harvest'], genCard:'brewPoison', summonKey:'zombie',
+    apply:s=>{ s.goldMul *= 1.25; } },
   { id:'dragonlord', icon:'🐉', name:'จอมมารเจ้ามังกร',
     bonus:'คริ +12% · คอมโบ: เพลิงมังกร ×2',
     cards:['dragonBreath','dragonHeart'], summonKey:'whelp',
@@ -1856,6 +1872,7 @@ function applyClass(c){
   S.classId = c.id;
   c.apply(S);
   c.cards.forEach(id => S.deck.push(id));
+  if (c.genCard) S.deck.push(c.genCard); // การ์ดสกิลหลอมประจำสาย
   S.summons = [ newSummon(c.summonKey) ];
   applyClassVisual();
   if (!META.classesPlayed) META.classesPlayed = {};
@@ -2092,6 +2109,8 @@ function pickSummonAbility(sm){
 // ============================================================
 let S = null;
 let enemies = [];
+let PENDING_DIFF = 0;
+const START_DECK_SIZE = 7; // ขนาดเด็คเริ่มต้น (ตัดเด็คได้ไม่ต่ำกว่านี้)
 
 const TOTAL_NODES = 50;
 const BOSS_NODES = { 10:'holyknight', 20:'archmage', 30:'golddragon', 40:'hero', 50:'goddess' };
@@ -2123,7 +2142,7 @@ function newRunState(){
     maxEnergy: 3 + (META.rbEnergy||0), drawBonus: 0, baseBlock: 0, baseBlockFlat: 0,
     deck: ['strike','strike','strike','strike','guard','guard','calm'],
     items: [],
-    classId: null, evolved: false, summons: [],
+    classId: null, evolved: false, summons: [], diff: PENDING_DIFF,
     eventBought: {},
     tutorialPending: false, everStress10: false, helpedVillager: false,
     // volatile battle state (not saved)
@@ -2276,8 +2295,15 @@ function makeUnit(o){
     debuffs:{ poison:0, burn:0, weak:0, vuln:0 }
   }, o);
 }
-function enemyBaseHp(node){ return 50 * Math.pow(1.14, node-1); }
-function enemyBaseAtk(node){ return 5 + node * 1.1; }
+// ระดับความยาก: 0=ปกติ 1=ฝันร้าย 2=นรก
+const DIFFS = [
+  { id:0, name:'ปกติ', icon:'🌑', hpMul:1,   atkMul:1,   note:'ด่านมาตรฐาน' },
+  { id:1, name:'ฝันร้าย', icon:'😱', hpMul:1.6, atkMul:1.35, note:'ศัตรูเลือดหนา ตีแรง' },
+  { id:2, name:'นรก', icon:'🔥', hpMul:2.4, atkMul:1.8,  note:'โหดสุดขีด สำหรับจอมมารแท้จริง' },
+];
+function curDiff(){ return DIFFS[(S && S.diff) || 0]; }
+function enemyBaseHp(node){ return 50 * Math.pow(1.14, node-1) * curDiff().hpMul; }
+function enemyBaseAtk(node){ return (5 + node * 1.1) * curDiff().atkMul; }
 function spawnMinion(){
   if (enemies.filter(e => e.minion && e.hp > 0).length >= 2 || enemies.length >= 4) return false;
   const node = S.node;
@@ -2338,6 +2364,7 @@ function startBattle(tier, overrides){
   S.usedUnsealThisBattle = false;
   S.tookDmgThisBattle = false;
   S.buffs = { str:0, momentum:0, dfire:false };
+  S._bloodOver = 0;
   S.drawPile = shuffle(S.deck);
   S.discardPile = [];
   S.hand = [];
@@ -2488,6 +2515,7 @@ function hitEnemy(e, rawMult, opts){
 function applyDebuff(e, key, n){
   if (!e || e.hp <= 0 || !n) return;
   e.debuffs[key] = (e.debuffs[key] || 0) + n;
+  if (key === 'poison' && e.debuffs.poison >= 10) unlockAch('poison-master');
   const ICONS = { poison:'☠️', burn:'🔥', weak:'💫', vuln:'🎯' };
   spawnText($('battle-area'), ICONS[key] + '+' + n, null, 'stress', .5 + enemies.indexOf(e)*.15, .5);
 }
@@ -2496,10 +2524,13 @@ function healPlayer(amount, allowOverflow){
   const over = S.hp + amount - S.maxHp;
   S.hp = Math.min(S.maxHp, S.hp + amount);
   spawnText($('battle-area'), '+' + fmt(Math.max(1, amount)), null, 'heal', .12, .5);
-  // แวมไพร์: ฮีลล้น → พลังเดือด (str)
+  // แวมไพร์: ฮีลล้น → พลังเดือด (str) — สะสมเศษล้นข้ามครั้ง ติดง่ายขึ้น
   if (allowOverflow && over > 0 && (S.classId === 'vampire')){
-    const stacks = Math.floor(over / (S.maxHp * .1));
+    S._bloodOver = (S._bloodOver || 0) + over;
+    const per = S.maxHp * .08;
+    const stacks = Math.floor(S._bloodOver / per);
     if (stacks > 0){
+      S._bloodOver -= stacks * per;
       S.buffs.str += stacks;
       spawnText($('battle-area'), '🩸 เลือดล้น! พลัง+' + stacks, null, 'crit', .15, .35);
     }
@@ -2577,10 +2608,37 @@ function playCard(idx){
   if (c.stress){ addStress(c.stress); }
   if (c.draw){ drawCards(c.draw); fxBurst('player', '🃏'); beep(500,.06,'square',.03); setTimeout(()=>beep(620,.06,'square',.03), 70); }
   if (c.healPct && c.type !== 'atk') healPlayer(S.maxHp * c.healPct, true);
+  if (c.create) doCreateCards(c.create);
 
   tutOnPlay(c);
   renderBattle(); renderHand();
   if (!aliveEnemies().length) winBattle();
+}
+
+// หลอมการ์ดสถานะด้วยเต๋า: ทอย 4-6 = สำเร็จเต็ม, 2-3 = ได้น้อย, 1 = พลาด (ได้ "ยาเสื่อม")
+// (สูตรมั่นคง: ลดผลของหน้าเต๋าต่ำ) — การ์ดที่หลอมเป็นของชั่วคราว หายเมื่อจบศึก
+function doCreateCards(spec){
+  unlockAch('alchemist');
+  let d = 1 + Math.floor(Math.random()*6);
+  if (spec.safe) d = Math.max(d, 2); // สูตรมั่นคงไม่มีทางได้ 1
+  let n;
+  if (d >= 4) n = spec.max;
+  else if (d >= 2) n = spec.min;
+  else n = 0;
+  fxBurst('player', '⚗️', true);
+  if (n === 0){
+    if (spec.dud){ if (S.hand.length < 8) S.hand.push(spec.dud); else S.discardPile.push(spec.dud); }
+    spawnText($('battle-area'), '🎲'+d+' หลอมพลาด! ได้ยาเสื่อม', null, 'stress', .3, .42);
+    beep(150,.2,'sawtooth',.05);
+  } else {
+    for (let i = 0; i < n; i++){
+      if (S.hand.length < 8) S.hand.push(spec.card);
+      else { const pos = Math.floor(Math.random()*(S.drawPile.length+1)); S.drawPile.splice(pos, 0, spec.card); }
+    }
+    const made = getCard(spec.card);
+    spawnText($('battle-area'), '🎲'+d+' หลอม '+made.icon+' ×'+n+'!', null, 'heal', .3, .42);
+    beep(560,.1,'square',.05); setTimeout(()=>beep(720,.12,'square',.05), 80);
+  }
 }
 
 function endTurn(fromSkip){
@@ -2652,10 +2710,12 @@ function enemyActAll(qi){
     return;
   }
   const e = alive[qi];
-  // DoT: พิษ/ไฟลวก ออกฤทธิ์ตอนต้นตาของมัน
+  // DoT: พิษ/ไฟลวก ออกฤทธิ์ตอนต้นตาของมัน (สแตคค้างข้ามเทิร์น ลด 1/เทิร์น)
   ['poison','burn'].forEach(k => {
     if (e.debuffs[k] > 0 && e.hp > 0){
-      const d = e.debuffs[k] * (2 + S.node * .4);
+      // ต่อสแตค = มากกว่าระหว่าง(สเกลตามด่าน, 2.5% ของเลือดสูงสุดศัตรู) — คงความคุ้มทุกด่าน
+      const perStack = Math.max(3 + S.node * .4, Math.ceil(e.maxHp * .025));
+      const d = Math.ceil(e.debuffs[k] * perStack);
       e.hp -= d;
       spawnText($('battle-area'), (k==='poison'?'☠️':'🔥') + ' ' + fmt(d), null, 'auto', .5 + enemies.indexOf(e)*.15, .35);
       e.debuffs[k]--;
@@ -2862,7 +2922,6 @@ function winBattle(){
   }
   if (TUT.active) endTutorial();
   const wasBoss = lead.isBoss;
-  const cardReward = lead.tier >= 2; // elite / boss / rare ได้เลือกการ์ดใหม่
   const node = S.node;
   enemies = [];
   setBgm('normal');
@@ -2877,10 +2936,10 @@ function winBattle(){
         showScreen('game-screen');
         // ถึงเวลาวิวัฒน์ Tier 2! (บอสด่าน 2 ขึ้นไป ถ้ายังไม่วิวัฒน์)
         if (!S.evolved && node >= 20 && EVOLUTIONS[S.classId]){
-          showEvolution(() => showBlessings(cardReward));
-        } else showBlessings(cardReward);
+          showEvolution(() => showBlessings());
+        } else showBlessings();
       });
-    } else showBlessings(cardReward);
+    } else showBlessings();
   }, 700);
 }
 
@@ -2922,8 +2981,8 @@ function showBlessings(thenCardReward){
       b.fn(S);
       updateHud();
       showOverlay('card-overlay', false);
-      if (thenCardReward) showNewCard();
-      else showPaths();
+      // การ์ดไม่ดรอปจากมอนสเตอร์แล้ว — ซื้อที่ร้านเท่านั้น (ยังคงโบนัสคัดลอกการ์ดของบอส)
+      maybeDuplicate();
     };
     row.appendChild(el);
   });
@@ -3019,10 +3078,15 @@ function showPaths(){
     types.push(t2);
     const INFO = {
       battle: ['⚔️ เส้นทางต่อสู้', ART.swords, 'มีศัตรูรออยู่ — ฆ่า เก็บของ โตขึ้น'],
-      elite:  ['⭐ เส้นทางอันตราย', ART.skull, 'ศัตรูหัวหน้า! โหดแต่ได้การ์ดใหม่'],
+      elite:  ['⭐ เส้นทางอันตราย', ART.skull, 'ศัตรูหัวหน้า! โหดแต่รางวัลงาม'],
       event:  ['❓ เส้นทางปริศนา', ART.question, 'อะไรก็เกิดขึ้นได้...'],
     };
     types.forEach(t => row.appendChild(doorEl(t, INFO[t][0], INFO[t][1], INFO[t][2])));
+    // หลังจบศึก: มีโอกาสเจอจุดพัก หรือ ร้านการ์ด เป็นทางเลือกเสริม
+    if (chance(.33)){
+      if (chance(.5)) row.appendChild(doorEl('camp', '⛺ จุดพักข้างทาง', ART.camp, 'ฟื้นฟู / นั่งสมาธิ / อัปเกรดการ์ด'));
+      else row.appendChild(doorEl('shop', '🏪 พ่อค้าการ์ดเร่ร่อน', ART.merchant, 'ซื้อการ์ดใหม่ / จ้างลบการ์ด'));
+    }
   }
   showOverlay('path-overlay', true);
 }
@@ -3089,7 +3153,8 @@ function chooseUpgradePath(idx, cancelCb){
 function openShop(){
   S.lastShopAt = S.battles;
   saveRun('shop');
-  const classCards = (getClass() || {cards:[]}).cards;
+  const cls = getClass() || {cards:[]};
+  const classCards = cls.cards.concat(cls.genCard ? [cls.genCard] : []);
   const pool = CARD_POOL.concat(classCards, CARD_POOL_EPIC);
   const stock = [];
   const p = pool.slice();
@@ -3163,10 +3228,37 @@ function openDeckView(mode, cb, cancelCb){
   showOverlay('deck-overlay', true);
 }
 
+// ✂️ ตัดเด็ค (รางวัลครองโลก) — ลบได้ไม่จำกัด แต่ห้ามต่ำกว่าขนาดเด็คเริ่มต้น
+function openDeckTrim(){
+  const grid = $('deck-grid');
+  grid.className = 'pickable';
+  const removable = S.deck.length > START_DECK_SIZE;
+  $('deck-title').textContent = '✂️ ตัดเด็ค (รางวัลครองโลก)';
+  $('deck-hint').textContent = removable
+    ? 'คลิกการ์ดที่ไม่ต้องการเพื่อลบ — ลบได้เรื่อยๆ จนเหลือขั้นต่ำ ' + START_DECK_SIZE + ' ใบ (ตอนนี้ ' + S.deck.length + ')'
+    : 'เด็คเหลือ ' + S.deck.length + ' ใบ — ถึงขั้นต่ำแล้ว!';
+  grid.innerHTML = '';
+  S.deck.forEach((id, i) => {
+    const c = getCard(id);
+    const el = document.createElement('div');
+    el.className = 'hand-card ctype-' + c.type + ' ' + rarityClass(c) + (removable ? '' : ' disabled');
+    el.innerHTML = '<div class="ccost">'+c.cost+'</div>' + (c.upgraded ? '<div class="upstar">⭐</div>' : '') +
+      '<div class="cicon">'+c.icon+'</div><div class="cn">'+c.name+'</div><div class="cd">'+c.desc+'</div>';
+    if (removable){
+      el.onclick = () => { S.deck.splice(i, 1); beep(200,.12,'sawtooth',.05); openDeckTrim(); };
+    }
+    grid.appendChild(el);
+  });
+  $('deck-close').textContent = 'เสร็จสิ้น';
+  $('deck-close').onclick = () => showOverlay('deck-overlay', false);
+  showOverlay('deck-overlay', true);
+}
+
 function openStatus(){
   const c = getClass();
   const rows = [
-    ['🎭 อาชีพ', c ? c.name : '-'],
+    ['⚔️ โหมด', DIFFS[S.diff||0].icon + ' ' + DIFFS[S.diff||0].name],
+    ['🎭 อาชีพ', (c ? (S.evolved && EVOLUTIONS[c.id] ? EVOLUTIONS[c.id].name : c.name) : '-')],
     ['🐾 ทีมผู้ติดตาม', (S.summons && S.summons.length) ? S.summons.map(sm => sm.name + ' Lv.' + sm.lv).join(', ') : '-'],
     ['⚔️ พลังโจมตี', fmt(S.power)],
     ['❤️ เลือด', fmt(S.hp) + ' / ' + fmt(S.maxHp)],
@@ -3542,13 +3634,16 @@ function eventFlowerField(){
   renderEvent(ART.pool, '🌻 ทุ่งดอกไม้แห่งความทรงจำ',
     'ทุ่งดอกไม้ทอดยาวสุดตา กลิ่นหอมชวนง่วง...<br>ได้ยินว่าใครงีบที่นี่จะฝันถึงชาติที่แล้ว',
     [
-      { label:'😴 นอนงีบสักตื่น (เครียด -3, ฝันถึงโลกเก่า)', fn:()=>{
+      { label:'😴 นอนงีบสักตื่น (ฟื้นเลือดเต็ม, เครียด -3)', fn:()=>{
           addStress(-3);
-          showOverlay('event-overlay', false);
-          showToast('💭 ความทรงจำชาติก่อนผุดขึ้นเป็นการ์ดใบใหม่!');
-          showNewCard();
+          S.hp = S.maxHp;
+          eventResult(ART.pool, '🌻 ฝันดี~', 'เจ้าฝันถึงโลกเก่า... ตื่นมาสดชื่นเต็มเปี่ยม<br><b>ฟื้นเลือดเต็ม + คลายเครียด -3</b> 💭❤️');
         } },
-      { label:'🚶 ไม่มีเวลานอน ข้าต้องครองโลก', fn:()=>eventResult(ART.pool, '🌻 ทุ่งดอกไม้', 'จอมมารสายงานยุ่ง... เดินจากไปทั้งที่ตาปรือ') }
+      { label:'💰 เด็ดดอกไม้ทองขาย', fn:()=>{
+          const g = Math.ceil((30 + S.node*6) * S.goldMul);
+          S.gold += g;
+          eventResult(ART.pool, '🌻 ทุ่งดอกไม้', 'ในทุ่งมีดอกไม้สีทองแท้ปนอยู่!<br><b>+'+fmt(g)+' ทอง</b> 💰');
+        } }
     ]);
 }
 // ── ด่าน 2: ป่าใบไม้ร่วง ──
@@ -3648,8 +3743,9 @@ function eventMirror(){
           showOverlay('event-overlay', false);
           banner('🪞 เงาสะท้อนก้าวออกมาจากกระจก!!');
           beep(180,.3,'sawtooth',.07); setTimeout(()=>beep(120,.4,'sawtooth',.07), 250);
-          const shHp = Math.ceil(70 * Math.pow(1.30, S.node-1) * 2);
-          startBattle(2, { art:'darklord', name:'🪞 เงาสะท้อนของเจ้า', hp:shHp, maxHp:shHp, gold:Math.ceil((12+S.node*6)*2), shadowReward:true });
+          // เลือดสมเหตุสมผล (~1.8 เท่าศัตรูปกติของด่าน) ไม่บวมจนน่าเบื่อ
+          const shHp = Math.ceil(enemyBaseHp(S.node) * 1.8);
+          startBattle(2, { art:'darklord', name:'🪞 เงาสะท้อนของเจ้า', hp:shHp, maxHp:shHp, gold:Math.ceil((12+S.node*5)*2), shadowReward:true });
         } },
       { label:'🚶 เมินเงา เดินผ่านไป', fn:()=>eventResult(ART.question, '🪞 กระจกคริสตัล', 'เงาในกระจกโบกมือลา...<br>น่าขนลุกชะมัด') }
     ]);
@@ -3759,12 +3855,117 @@ function eventPurify(){
       { label:'🚶 เดินผ่านไป', fn:()=>eventResult(ART.pool, '🕊️ น้ำพุแห่งการชำระ', 'น้ำศักดิ์สิทธิ์กับจอมมาร... อยู่ห่างกันไว้ก็ดีแล้ว') }
     ]);
 }
+// ===== อีเวนต์เพิ่มเติมตามธีมด่าน (ด่านละ 1) =====
+// ── ด่าน 1: ทุ่งหญ้า — เด็กเลี้ยงแกะ ──
+function eventShepherd(){
+  renderEvent(ART.village, '🐑 เด็กเลี้ยงแกะหลงทาง',
+    'เด็กน้อยร้องไห้กลางทุ่ง ฝูงแกะกระจัดกระจาย...<br>「พี่ปีศาจ... ช่วยต้อนแกะหน่อยได้ไหม?」',
+    [
+      { label:'🐑 ช่วยต้อนแกะให้ (ใจดี)', fn:()=>{
+          S.maxHp += 12; S.hp = Math.min(S.maxHp, S.hp + Math.ceil(S.maxHp*.4));
+          addStress(-2); S.helpedVillager = true; unlockAch('kind-lord');
+          eventResult(ART.village, '🐑 ขอบคุณครับ!', 'เด็กยิ้มทั้งน้ำตา มอบนมแกะอุ่นๆ ให้<br><b>เลือดสูงสุด +12, ฟื้น 40%, เครียด -2</b> 🥛');
+        } },
+      { label:'😈 จับแกะกินซะเลย', fn:()=>{
+          S.hp = Math.min(S.maxHp, S.hp + Math.ceil(S.maxHp*.5));
+          addStress(2);
+          eventResult(ART.village, '🐑 แอ๊ะๆ...', 'อิ่มหนำสำราญ! <b>ฟื้นเลือด 50%</b> 🍖<br>แต่เสียงร้องไห้ของเด็กตามมาหลอน... (เครียด +2)');
+        } }
+    ]);
+}
+// ── ด่าน 2: ป่าใบไม้ร่วง — บ่อน้ำพุนางไม้ ──
+function eventDryad(){
+  renderEvent(ART.pool, '🍁 นางไม้แห่งพงไพร',
+    'นางไม้ผมใบเมเปิลโผล่จากต้นไม้เก่าแก่...<br>「จอมมารน้อย... เจ้าต้องการพรของข้าหรือไม่?」',
+    [
+      { label:'🍃 ขอพรพลัง (พลัง +15%)', fn:()=>{
+          S.power = Math.ceil(S.power*1.15);
+          eventResult(ART.pool, '🍁 พรพงไพร', 'ใบไม้สีทองหมุนวนรอบกาย<br><b>พลังโจมตี +15%</b> (ตอนนี้ '+fmt(S.power)+') 🍃');
+        } },
+      { label:'🍃 ขอพรปัญญา (ปลดผนึก +1)', fn:()=>{
+          S.unseal++;
+          eventResult(ART.pool, '🍁 พรปัญญา', 'นางไม้แตะหน้าผากเจ้าเบาๆ...<br><b>ได้รับปลดผนึก +1!</b> (มี '+S.unseal+' ครั้ง) 🔮');
+        } },
+      { label:'🪓 โค่นต้นไม้เอาฟืน', danger:true, fn:()=>{
+          const g = Math.ceil(60*S.goldMul); S.gold += g; addStress(2);
+          eventResult(ART.pool, '🍁 นางไม้โกรธ!', 'นางไม้กรีดร้องแล้วสลายไป... ได้ฟืนขายเป็นทอง +'+fmt(g)+' 💰<br>แต่ป่าทั้งผืนจ้องมองเจ้าด้วยความแค้น (เครียด +2)');
+        } }
+    ]);
+}
+// ── ด่าน 3: ถ้ำคริสตัล — เตาหลอมแคระ ──
+function eventForge(){
+  const canUpgrade = S.deck.some(id => !id.includes('+') && CARD_DEFS[id] && CARD_DEFS[id].ups);
+  const cost = 50 + S.node*5;
+  renderEvent(ART.altar, '🔨 เตาหลอมคนแคระร้าง',
+    'เตาหลอมโบราณยังคุกรุ่นด้วยไฟคริสตัล...<br>เหมาะแก่การตีการ์ดให้คมกริบ',
+    [
+      { label: canUpgrade ? '🔨 ลับคมการ์ด (ฟรี! ที่เตานี้)' : '🔨 ลับคมการ์ด (อัปเกรดครบแล้ว)', disabled: !canUpgrade, fn:()=>{
+          showOverlay('event-overlay', false);
+          openDeckView('upgrade', i => chooseUpgradePath(i, () => eventForge()), () => eventForge());
+        } },
+      { label:'⚒️ หลอมพลังใส่ร่าง (จ่าย '+fmt(cost)+' ทอง: พลัง +20%)', disabled: S.gold < cost, fn:()=>{
+          S.gold -= cost; S.power = Math.ceil(S.power*1.2);
+          eventResult(ART.altar, '🔨 ตีเหล็กร้อน!', 'เจ้าจุ่มกรงเล็บลงเตาหลอม...<br><b>พลังโจมตี +20%</b> (ตอนนี้ '+fmt(S.power)+') 🔥');
+        } },
+      { label:'🚶 เดินผ่านไป', fn:()=>eventResult(ART.altar, '🔨 เตาหลอมร้าง', 'ความร้อนอบอ้าวเกินไป... เจ้าเดินจากมา') }
+    ]);
+}
+// ── ด่าน 4: ภูเขาหิมะ — ถ้ำหมีจำศีล ──
+function eventBearCave(){
+  renderEvent(ART.question, '🐻 ถ้ำหมีจำศีล',
+    'ถ้ำอุ่นๆ มีหมียักษ์นอนกรนจำศีลอยู่...<br>ข้างกายมีกองสมบัติที่นักผจญภัยเคยทิ้งไว้',
+    [
+      { label:'🤫 ย่องขโมยสมบัติเงียบๆ (เสี่ยง!)', danger:true, fn:()=>{
+          const g = Math.ceil((70 + S.node*8)*S.goldMul);
+          if (chance(.55)){
+            S.gold += g;
+            let extra = '';
+            if (S.items.length < MAX_ITEMS){ const it = pick(ITEM_KEYS); S.items.push(it); extra = '<br>และ <b>'+ITEM_DEFS[it].icon+' '+ITEM_DEFS[it].name+'</b>!'; }
+            eventResult(ART.question, '🐻 สำเร็จ!', 'เจ้าย่องเบากริบ ได้สมบัติ <b>+'+fmt(g)+' ทอง</b> 💰'+extra+'<br>หมียังหลับปุ๋ย... เนียน!');
+          } else {
+            showOverlay('event-overlay', false);
+            banner('🐻 หมีตื่น!! GROARRR!!');
+            beep(90,.35,'sawtooth',.08);
+            startBattle(2, { art:'golddragon', name:'🐻 หมียักษ์โกรธจัด' });
+          }
+        } },
+      { label:'🔥 ปลุกหมีท้าสู้ตรงๆ (กล้าหาญ)', fn:()=>{
+          showOverlay('event-overlay', false);
+          banner('🐻 เจ้าเตะหมีให้ตื่น!!');
+          beep(110,.3,'sawtooth',.07);
+          startBattle(2, { art:'golddragon', name:'🐻 หมียักษ์แห่งขุนเขา', shadowReward:true });
+        } },
+      { label:'🚶 ปล่อยมันหลับต่อ', fn:()=>eventResult(ART.question, '🐻 ถ้ำหมีจำศีล', 'อย่าปลุกหมีที่กำลังหลับ... สุภาษิตจอมมาร') }
+    ]);
+}
+// ── ด่าน 5: วิหารเวหา — ระฆังศักดิ์สิทธิ์ ──
+function eventHolyBell(){
+  renderEvent(ART.shrine, '🔔 ระฆังศักดิ์สิทธิ์',
+    'ระฆังทองคำยักษ์แขวนอยู่กลางวิหาร...<br>ว่ากันว่าเสียงของมันขับไล่ความมืด (และจอมมาร)',
+    [
+      { label:'🔔 ตีระฆังกลบเกลื่อน (ล้างเครียด+ฟื้นเลือด)', fn:()=>{
+          S.stress = 0; S.hp = Math.min(S.maxHp, S.hp + Math.ceil(S.maxHp*.3));
+          eventResult(ART.shrine, '🔔 ก้องกังวาน~', 'เสียงระฆังสะอาดล้างจิตใจ<br><b>เครียดเหลือ 0 + ฟื้นเลือด 30%</b> 🕊️');
+        } },
+      { label:'😈 ทุบระฆังให้แตก (พลังมืด!)', danger:true, fn:()=>{
+          if (chance(.5)){
+            S.power = Math.ceil(S.power*1.3);
+            eventResult(ART.shrine, '🔔 ปัง!!', 'ระฆังแตกกระจาย พลังศักดิ์สิทธิ์ที่ถูกกักไหลกลับด้านมืด!<br><b>พลังโจมตี +30%</b> (ตอนนี้ '+fmt(S.power)+') 😈');
+          } else {
+            const dmg = Math.ceil(S.maxHp*.25); S.hp = Math.max(1, S.hp - dmg); addStress(3);
+            eventResult(ART.shrine, '🔔 สวดมนต์สะท้อน!', 'คลื่นเสียงศักดิ์สิทธิ์ระเบิดใส่เจ้า!! ⚡<br>เสียเลือด <b>'+fmt(dmg)+'</b> เครียด +3 😱');
+          }
+        } },
+      { label:'🚶 เดินผ่านไป', fn:()=>eventResult(ART.shrine, '🔔 ระฆังศักดิ์สิทธิ์', 'เจ้าอุดหูแล้วรีบเดินผ่านไป...') }
+    ]);
+}
+
 const ACT_EVENTS = {
-  1: [eventHolyCow, eventFlowerField],
-  2: [eventMushroom, eventSquirrel],
-  3: [eventCrystalVein, eventMirror],
-  4: [eventFrozen, eventSnowman],
-  5: [eventJudgment, eventPurify],
+  1: [eventHolyCow, eventFlowerField, eventShepherd],
+  2: [eventMushroom, eventSquirrel, eventDryad],
+  3: [eventCrystalVein, eventMirror, eventForge],
+  4: [eventFrozen, eventSnowman, eventBearCave],
+  5: [eventJudgment, eventPurify, eventHolyBell],
 };
 
 // (อีเวนต์เปลี่ยนอาชีพกลางทางถูกถอดออกแล้ว — มีแต่การวิวัฒน์ Tier 2 ที่เพิ่มซัมมอนตัวที่ 2)
@@ -3949,7 +4150,7 @@ function gameOver(){
   clearSave();
   setBgm('off');
   const shards = S.node*2 + S.kills;
-  const rbGain = 1 + Math.floor(S.node/10);
+  const rbGain = (1 + Math.floor(S.node/10)) * (1 + (S.diff||0));
   META.shards += shards;
   META.rbPts = (META.rbPts||0) + rbGain;
   saveMeta();
@@ -3970,17 +4171,28 @@ function victory(){
   clearSave();
   setBgm('normal');
   unlockAch('world-conquest');
-  const shards = 200 + S.kills;
+  const diff = S.diff || 0;
+  const shards = 200 + S.kills + diff*180;
+  const rbGain = 15 + diff*15; // รางวัลครองโลก: วิญญาณเกิดก้อนใหญ่
   META.shards += shards;
-  META.rbPts = (META.rbPts||0) + 8;
+  META.rbPts = (META.rbPts||0) + rbGain;
   META.wins++;
+  let unlockMsg = '';
+  if (diff >= (META.maxDiff||0) && diff < 2){
+    META.maxDiff = diff + 1;
+    unlockMsg = '<br>🔓 ปลดล็อกโหมด <b>' + DIFFS[diff+1].icon + ' ' + DIFFS[diff+1].name + '</b>!';
+  }
+  if (diff === 1) unlockAch('nightmare-clear');
+  if (diff === 2) unlockAch('hell-clear');
   saveMeta();
   beep(523,.15,'square',.06); setTimeout(()=>beep(659,.15,'square',.06),160); setTimeout(()=>beep(784,.2,'square',.06),320); setTimeout(()=>beep(1047,.5,'square',.06),500);
   $('victory-stats').innerHTML =
+    '⚔️ โหมด: <b>' + DIFFS[diff].icon + ' ' + DIFFS[diff].name + '</b><br>' +
     '☠️ สังหารไป: <b>'+S.kills+'</b> ตน<br>' +
     '💰 ทองสะสม: <b>'+fmt(S.gold)+'</b><br>' +
     '💜 ได้เศษวิญญาณ: <b>+'+shards+'</b><br>' +
-    '👑 ครองโลกสำเร็จ: <b>'+META.wins+'</b> ครั้ง';
+    '🔁 วิญญาณเกิด: <b>+'+rbGain+'</b> (รวม '+(META.rbPts||0)+')<br>' +
+    '👑 ครองโลกสำเร็จ: <b>'+META.wins+'</b> ครั้ง' + unlockMsg;
   showScreen('victory-screen');
 }
 
@@ -4024,7 +4236,26 @@ function openRebirth(){
 function newGameNow(){
   clearSave(); // เริ่มเกมใหม่ = ทับเซฟเดิมทันที
   setBgm('normal');
-  startStory();
+  if ((META.maxDiff || 0) > 0) chooseDifficulty(() => startStory());
+  else { PENDING_DIFF = 0; startStory(); }
+}
+function chooseDifficulty(after){
+  showScreen('game-screen');
+  document.querySelector('#class-overlay h2').textContent = '⚔️ เลือกระดับความยาก';
+  document.querySelector('#class-overlay div').innerHTML = 'ยิ่งยากยิ่งได้ทอง/เศษวิญญาณ/แต้มเกิดใหม่มากขึ้น!<br>(ชนะโหมดหนึ่งเพื่อปลดล็อกโหมดถัดไป)';
+  const row = $('class-row');
+  row.innerHTML = '';
+  const maxD = META.maxDiff || 0;
+  DIFFS.forEach(d => {
+    if (d.id > maxD) return;
+    const el = document.createElement('div');
+    el.className = 'pick-card';
+    el.innerHTML = '<div class="icon">'+d.icon+'</div><div class="cname">โหมด'+d.name+'</div>' +
+      '<div class="cdesc">'+d.note+'<br>ศัตรูเลือด ×'+d.hpMul+' · ดาเมจ ×'+d.atkMul+'</div>';
+    el.onclick = () => { PENDING_DIFF = d.id; beep(440,.1,'square'); showOverlay('class-overlay', false); after(); };
+    row.appendChild(el);
+  });
+  showOverlay('class-overlay', true);
 }
 
 const SHOP = [
