@@ -395,6 +395,16 @@
   /* ---- end screens ---- */
   .end-screen { text-align:center; padding-top:30px; }
   .end-screen h1 { font-size:2.1rem; margin-bottom:8px; transform:rotate(-1.5deg); }
+
+  /* ---- castle talent tree ---- */
+  .talent-group { margin:14px 0 4px; }
+  .talent-group .tg-head { font-family:'Mali',cursive; font-weight:700; font-size:1.15rem; color:#7d3c98; margin-bottom:8px; transform:rotate(-.5deg); }
+  .talent-row { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+  .talent-card { width:200px; padding:10px 12px; text-align:center; }
+  .talent-card .ti { font-size:1.7rem; }
+  .talent-card .tn { font-family:'Mali',cursive; font-weight:700; margin:2px 0; }
+  .talent-card .td { font-size:.85rem; opacity:.78; line-height:1.4; margin-bottom:8px; min-height:48px; }
+  .talent-card .tlv { font-size:.8rem; color:#b3322b; margin-bottom:6px; }
   .end-stats { display:inline-block; text-align:left; padding:14px 26px; margin:14px 0; font-size:1.08rem; line-height:1.9; }
   .shop-row { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin:14px 0 20px; }
   .shop-item { width:185px; padding:12px; text-align:center; }
@@ -449,21 +459,20 @@
     <div class="subtitle">~ เกมการ์ดเทิร์นเบส Roguelike ฉบับลายเส้นวาดมือ ~</div>
     <div id="title-buttons">
       <button class="btn big" id="continue-btn" style="display:none;" onclick="continueRun()"></button>
-      <button class="btn big" id="newgame-btn" onclick="newGameNow()">✦ เริ่มต้นเกิดใหม่ ✦</button>
+      <button class="btn big" id="newgame-btn" onclick="enterCastle()">🏰 เข้าปราสาทจอมมาร</button>
       <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center;">
         <button class="btn small" onclick="openAch()">🏆 ความสำเร็จ (<span id="title-ach">0</span>)</button>
         <button class="btn small" onclick="openSettings()">⚙️ ตั้งค่า</button>
-        <button class="btn small" onclick="openRebirth()">🔁 พรเกิดใหม่ (<span id="title-rb">0</span>)</button>
         <button class="btn small" onclick="openTransfer('export')">📤 ย้ายเซฟไปเครื่องอื่น</button>
         <button class="btn small" onclick="openTransfer('import')">📥 นำเข้าเซฟ</button>
         <button class="btn small" onclick="doLogout()">🚪 ออกจากระบบ</button>
       </div>
     </div>
-    <div style="margin-top:12px; font-size:1rem;">💜 เศษวิญญาณสะสม: <b id="title-shards">0</b></div>
+    <div style="margin-top:12px; font-size:1rem;">💜 วิญญาณสะสม: <b id="title-shards">0</b></div>
     <div style="margin-top:14px; opacity:.6; font-size:.95rem; line-height:1.7;">
-      🃏 สู้แบบเทิร์นเบสด้วยการ์ด · 🚪 เลือกเส้นทางเดินต่อ · 🎒 เก็บไอเทมติดตัว<br>
-      ⛺ แคมป์ทุก 5 ศึก (อัปเกรดการ์ด) · 🏪 ร้านค้าทุก 10 ศึก (ซื้อ/ลบการ์ด)<br>
-      ✨ ระวังมอนสเตอร์หายาก · 😱 คุมความเครียดให้ดี · ☠️ ตายแล้วเริ่มใหม่ (Roguelike!)
+      🏰 อัปเกรดทาเลนต์ถาวรที่ปราสาทจอมมาร ก่อนออกเดินทาง<br>
+      🃏 สู้เทิร์นเบสด้วยการ์ด · 🚪 เลือกเส้นทาง · 😱 คุมความเครียด<br>
+      ✨ ระวังมอนสเตอร์หายาก · ☠️ ตายแล้วเริ่มใหม่ แต่วิญญาณคงอยู่ (Roguelike!)
     </div>
   </div>
 
@@ -595,12 +604,7 @@
     <h1 style="color:#b3322b;">☠️ จอมมารพ่ายแพ้... ☠️</h1>
     <div style="font-size:1.1rem; opacity:.75; line-height:1.7;">เซบาส: 「ท่านลอร์ดดด!! ...ไม่เป็นไรขอรับ<br>จอมมารที่แท้จริงย่อมเกิดใหม่ได้เสมอ」</div>
     <div class="end-stats sketch" id="gameover-stats"></div>
-    <h2 style="font-family:'Mali'; margin-bottom:6px;">💜 ร้านค้าวิญญาณ (อัปเกรดถาวร)</h2>
-    <div style="margin-bottom:8px;">เศษวิญญาณ: <b id="go-shards" style="color:#7d3c98;">0</b></div>
-    <div class="shop-row" id="shop-row"></div>
-    <button class="btn" onclick="openRebirth()">🔁 ร้านพรแห่งการเกิดใหม่</button>
-    <div style="height:10px;"></div>
-    <button class="btn big" onclick="newGameNow()">⚰️ เกิดใหม่อีกครั้ง!</button>
+    <button class="btn big" onclick="enterCastle()">🏰 กลับปราสาทจอมมาร</button>
   </div>
 
   <!-- ================= VICTORY ================= -->
@@ -613,11 +617,21 @@
       โลกทั้งใบหมอบราบใต้เงาของเจ้า 😈
     </div>
     <div class="end-stats sketch" id="victory-stats"></div>
-    <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-bottom:10px;">
-      <button class="btn" onclick="openDeckTrim()">✂️ ตัดเด็ค (รางวัล)</button>
-      <button class="btn" onclick="openRebirth()">🔁 ร้านพรเกิดใหม่</button>
+    <button class="btn big" onclick="enterCastle()">🏰 กลับปราสาทจอมมาร (เล่นใหม่)</button>
+  </div>
+
+  <!-- ================= OVERLORD'S CASTLE (base / talent UI) ================= -->
+  <div id="castle-screen" class="screen end-screen">
+    <h1 style="color:#7d3c98;">🏰 ปราสาทจอมมาร 🏰</h1>
+    <div style="opacity:.78; line-height:1.7; font-size:1.05rem;">
+      เซบาส: 「ยินดีต้อนรับกลับสู่ปราสาทขอรับ ท่านลอร์ด<br>ใช้ <b>วิญญาณ</b> เสริมพลังถาวร ก่อนออกเดินทางครั้งใหม่」
     </div>
-    <button class="btn big" onclick="newGameNow()">🌍 ครองโลกอีกรอบ (เล่นใหม่)</button>
+    <div style="margin:10px 0 4px; font-size:1.25rem;">💜 วิญญาณ: <b id="castle-souls" style="color:#7d3c98;">0</b></div>
+    <div id="castle-talents" style="max-width:720px; margin:0 auto;"></div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin:18px 0 24px;">
+      <button class="btn big" onclick="castleDepart()">⚔️ ออกเดินทาง!</button>
+      <button class="btn" onclick="enterTitle()">🚪 กลับหน้าหลัก</button>
+    </div>
   </div>
 
   <!-- ================= MAP OVERLAY ================= -->
@@ -670,13 +684,7 @@
     </div>
   </div>
 
-  <!-- ================= REBIRTH OVERLAY ================= -->
-  <div id="rebirth-overlay" class="overlay">
-    <h2>🔁 พรแห่งการเกิดใหม่</h2>
-    <div style="margin:-8px 0 12px; opacity:.7;">ตายหรือชนะ = ได้แต้มเกิดใหม่ ใช้เสริมพลังถาวรให้รันต่อไปง่ายขึ้น<br>แต้มเกิดใหม่: <b id="rb-pts" style="color:#b3322b;">0</b></div>
-    <div class="shop-row" id="rb-row"></div>
-    <button class="btn" onclick="showOverlay('rebirth-overlay', false)">ปิด</button>
-  </div>
+  <!-- (ร้านพรเกิดใหม่ถูกรวมเข้าปราสาทจอมมารแล้ว) -->
 
   <!-- ================= SAVE TRANSFER OVERLAY ================= -->
   <div id="transfer-overlay" class="overlay">
@@ -1174,7 +1182,7 @@ function hashPw(s){
   for (let i=0;i<s.length;i++){ h = ((h<<5)+h+s.charCodeAt(i))|0; }
   return 'h'+(h>>>0).toString(36);
 }
-function defaultMeta(){ return { shards:0, pLv:0, hLv:0, uLv:0, wins:0, runs:0, tutorialDone:false, ach:{}, classesPlayed:{}, totalKills:0, rbPts:0, rbAtk:0, rbEnergy:0, summonSlot3:false, maxDiff:0 }; }
+function defaultMeta(){ return { shards:0, pLv:0, hLv:0, uLv:0, gLv:0, wins:0, runs:0, tutorialDone:false, ach:{}, classesPlayed:{}, totalKills:0, rbPts:0, rbAtk:0, rbEnergy:0, summonSlot3:false, maxDiff:0 }; }
 function acct(){ return DB.users[USER]; }
 
 function loginMsg(t){ $('login-msg').textContent = t || ''; }
@@ -1275,11 +1283,12 @@ function enterTitle(){
   if (!META.ach) META.ach = {};
   if (!META.classesPlayed) META.classesPlayed = {};
   if (!META.totalKills) META.totalKills = 0;
-  if (!META.rbPts) META.rbPts = 0;
+  if (META.gLv == null) META.gLv = 0;
+  // ย้ายสกุลเงินเก่า "แต้มเกิดใหม่" → รวมเป็น "วิญญาณ" สกุลเดียว (×15)
+  if (META.rbPts){ META.shards += META.rbPts * 15; META.rbPts = 0; saveMeta(); }
   $('title-greet').innerHTML = '🖋️ จอมมาร <b>' + USER + '</b> — เซบาสรอรับใช้อยู่ขอรับ';
   $('title-shards').textContent = META.shards.toLocaleString();
   $('title-ach').textContent = achCount() + '/' + ACH.length;
-  $('title-rb').textContent = META.rbPts;
   setBgm('normal');
   const sv = acct().save;
   const cbtn = $('continue-btn');
@@ -2179,7 +2188,7 @@ function newRunState(){
     gold: 0,
     unseal: 1 + META.uLv,
     crit: 0.05, critMul: 3,
-    lifesteal: 0, goldMul: 1,
+    lifesteal: 0, goldMul: 1 + 0.1*(META.gLv||0),
     kills: 0,
     stress: 0, stressGuard: 0,
     battles: 0, lastCampAt: 0, lastShopAt: 0,
@@ -3427,31 +3436,7 @@ function openDeckView(mode, cb, cancelCb){
   showOverlay('deck-overlay', true);
 }
 
-// ✂️ ตัดเด็ค (รางวัลครองโลก) — ลบได้ไม่จำกัด แต่ห้ามต่ำกว่าขนาดเด็คเริ่มต้น
-function openDeckTrim(){
-  const grid = $('deck-grid');
-  grid.className = 'pickable';
-  const removable = S.deck.length > START_DECK_SIZE;
-  $('deck-title').textContent = '✂️ ตัดเด็ค (รางวัลครองโลก)';
-  $('deck-hint').textContent = removable
-    ? 'คลิกการ์ดที่ไม่ต้องการเพื่อลบ — ลบได้เรื่อยๆ จนเหลือขั้นต่ำ ' + START_DECK_SIZE + ' ใบ (ตอนนี้ ' + S.deck.length + ')'
-    : 'เด็คเหลือ ' + S.deck.length + ' ใบ — ถึงขั้นต่ำแล้ว!';
-  grid.innerHTML = '';
-  S.deck.forEach((id, i) => {
-    const c = getCard(id);
-    const el = document.createElement('div');
-    el.className = 'hand-card ctype-' + c.type + ' ' + rarityClass(c) + (removable ? '' : ' disabled');
-    el.innerHTML = '<div class="ccost">'+c.cost+'</div>' + (c.upgraded ? '<div class="upstar">⭐</div>' : '') +
-      '<div class="cicon">'+c.icon+'</div><div class="cn">'+c.name+'</div><div class="cd">'+c.desc+'</div>';
-    if (removable){
-      el.onclick = () => { S.deck.splice(i, 1); beep(200,.12,'sawtooth',.05); openDeckTrim(); };
-    }
-    grid.appendChild(el);
-  });
-  $('deck-close').textContent = 'เสร็จสิ้น';
-  $('deck-close').onclick = () => showOverlay('deck-overlay', false);
-  showOverlay('deck-overlay', true);
-}
+// (รางวัล "ตัดเด็ค" ถูกถอดออก — เปลี่ยนเป็นรางวัลวิญญาณก้อนใหญ่ + ปราสาทจอมมารแทน)
 
 function openStatus(){
   const c = getClass();
@@ -4341,20 +4326,18 @@ function gameOver(){
   S.playerTurn = false;
   clearSave();
   setBgm('off');
-  const shards = S.node*2 + S.kills;
-  const rbGain = (1 + Math.floor(S.node/10)) * (1 + (S.diff||0));
-  META.shards += shards;
-  META.rbPts = (META.rbPts||0) + rbGain;
+  // รวมรางวัลเป็น "วิญญาณ" สกุลเดียว (สเกลตามความยาก)
+  const shards = (S.node*2 + S.kills) * (1 + (S.diff||0)*0.5);
+  const gain = Math.ceil(shards);
+  META.shards += gain;
   saveMeta();
   beep(200,.3,'sawtooth',.06); setTimeout(()=>beep(150,.4,'sawtooth',.06),250); setTimeout(()=>beep(100,.7,'sawtooth',.06),500);
   $('gameover-stats').innerHTML =
     '🗺️ เดินทางถึงโหนด: <b>'+S.node+'</b>/50<br>' +
     '⚔️ พลังสุดท้าย: <b>'+fmt(S.power)+'</b><br>' +
-    '🃏 เด็คสุดท้าย: <b>'+S.deck.length+'</b> ใบ<br>' +
     '☠️ สังหารไป: <b>'+S.kills+'</b> ตน<br>' +
-    '💜 ได้เศษวิญญาณ: <b>+'+shards+'</b><br>' +
-    '🔁 ได้แต้มเกิดใหม่: <b>+'+rbGain+'</b> (รวม '+(META.rbPts||0)+')';
-  renderShop();
+    '💜 ได้วิญญาณ: <b>+'+gain+'</b> (รวม '+META.shards.toLocaleString()+')<br>' +
+    '<span style="opacity:.7;">นำไปอัปเกรดทาเลนต์ที่ปราสาทจอมมารได้เลย!</span>';
   showScreen('gameover-screen');
 }
 
@@ -4364,10 +4347,9 @@ function victory(){
   setBgm('normal');
   unlockAch('world-conquest');
   const diff = S.diff || 0;
-  const shards = 200 + S.kills + diff*180;
-  const rbGain = 15 + diff*15; // รางวัลครองโลก: วิญญาณเกิดก้อนใหญ่
-  META.shards += shards;
-  META.rbPts = (META.rbPts||0) + rbGain;
+  // รางวัลครองโลก: วิญญาณก้อนใหญ่ (พรีเมียม) สเกลตามความยาก
+  const gain = 600 + S.kills*3 + diff*600;
+  META.shards += gain;
   META.wins++;
   let unlockMsg = '';
   if (diff >= (META.maxDiff||0) && diff < 2){
@@ -4382,55 +4364,89 @@ function victory(){
     '⚔️ โหมด: <b>' + DIFFS[diff].icon + ' ' + DIFFS[diff].name + '</b><br>' +
     '☠️ สังหารไป: <b>'+S.kills+'</b> ตน<br>' +
     '💰 ทองสะสม: <b>'+fmt(S.gold)+'</b><br>' +
-    '💜 ได้เศษวิญญาณ: <b>+'+shards+'</b><br>' +
-    '🔁 วิญญาณเกิด: <b>+'+rbGain+'</b> (รวม '+(META.rbPts||0)+')<br>' +
-    '👑 ครองโลกสำเร็จ: <b>'+META.wins+'</b> ครั้ง' + unlockMsg;
+    '💜 รางวัลครองโลก: <b style="color:#7d3c98;">+'+fmt(gain)+' วิญญาณ!</b> (รวม '+META.shards.toLocaleString()+')<br>' +
+    '👑 ครองโลกสำเร็จ: <b>'+META.wins+'</b> ครั้ง' + unlockMsg +
+    '<br><span style="opacity:.7;">เอาไปเสริมพลังถาวรที่ปราสาทจอมมารต่อได้เลย!</span>';
   showScreen('victory-screen');
 }
 
-// ---------- พรแห่งการเกิดใหม่ (Rebirth Points) ----------
-const REBIRTH_SHOP = [
-  { key:'rbAtk', icon:'⚔️', name:'วิญญาณนักสู้', desc:()=>'พลังเริ่มต้น +2% ถาวร/ครั้ง (ตอนนี้ +'+(2*(META.rbAtk||0))+'%)', cost:()=>1, max:99 },
-  { key:'rbEnergy', icon:'⚡', name:'แก่นพลังงานมาร', desc:()=>'พลังงานสูงสุดเริ่มต้น +1 (ตอนนี้ +'+(META.rbEnergy||0)+'/2)', cost:()=>8, max:2 },
-  { key:'summonSlot3', icon:'🌟', name:'พันธสัญญาลึก', desc:()=>'ปลดล็อกช่องสกิลที่ 3 ของผู้ติดตาม (ทรงพลังมาก!)', cost:()=>30, max:1, bool:true },
+// ============================================================
+// 🏰 ปราสาทจอมมาร (Overlord's Castle) — ฐาน/ทาเลนต์ถาวร ใช้ "วิญญาณ" (META.shards)
+// ============================================================
+// ทาเลนต์จัดกลุ่มเป็นต้นไม้พลัง — ทุกอย่างจ่ายด้วยวิญญาณสกุลเดียว
+const CASTLE_TALENTS = [
+  { group:'⚔️ สายโจมตี', items:[
+    { key:'pLv', icon:'⚔️', name:'พลังมารแต่กำเนิด', desc:'พลังเริ่มต้น +15% ต่อเลเวล', cost:()=>15 + META.pLv*12, max:99 },
+    { key:'rbAtk', icon:'🗡️', name:'คมเขี้ยวมาร', desc:'พลังเริ่มต้น +2% ต่อเลเวล (ปรับละเอียด)', cost:()=>8 + (META.rbAtk||0)*5, max:50 },
+  ]},
+  { group:'❤️ สายความอึด', items:[
+    { key:'hLv', icon:'❤️', name:'ร่างอมตะ', desc:'เลือดสูงสุดเริ่มต้น +20 ต่อเลเวล', cost:()=>15 + META.hLv*12, max:99 },
+  ]},
+  { group:'💰 สายทรัพย์ศฤงคาร', items:[
+    { key:'gLv', icon:'👑', name:'มงกุฎโลภะ', desc:'อัตราดรอปทอง +10% ต่อเลเวล', cost:()=>20 + (META.gLv||0)*15, max:5 },
+  ]},
+  { group:'🔮 สายพลังลับ & ปลดล็อก', items:[
+    { key:'uLv', icon:'🔮', name:'รอยร้าวของผนึก', desc:'เริ่มเกมพร้อม "ปลดผนึก" +1', cost:()=>120 + META.uLv*120, max:2 },
+    { key:'rbEnergy', icon:'⚡', name:'แก่นพลังงานมาร', desc:'พลังงานสูงสุดเริ่มต้น +1', cost:()=>150 + (META.rbEnergy||0)*150, max:2 },
+    { key:'summonSlot3', icon:'🌟', name:'พันธสัญญาลึก', desc:'ปลดล็อกช่องสกิลที่ 3 ของผู้ติดตาม (ทรงพลัง!)', cost:()=>250, max:1, bool:true },
+  ]},
 ];
-function openRebirth(){
-  $('rb-pts').textContent = (META.rbPts||0);
-  if ($('title-rb')) $('title-rb').textContent = (META.rbPts||0);
-  const row = $('rb-row');
-  row.innerHTML = '';
-  REBIRTH_SHOP.forEach(it => {
-    const lvl = it.bool ? (META[it.key] ? 1 : 0) : (META[it.key]||0);
-    const maxed = lvl >= it.max;
-    const cost = it.cost();
-    const el = document.createElement('div');
-    el.className = 'shop-item sketch';
-    el.innerHTML = '<div class="icon">'+it.icon+'</div><div class="sname">'+it.name+'</div><div class="sdesc">'+it.desc()+'</div>';
-    const b = document.createElement('button');
-    b.className = 'btn';
-    b.style.fontSize = '.95rem';
-    b.textContent = maxed ? 'เต็มแล้ว!' : '🔁 ' + cost + ' แต้ม';
-    b.disabled = maxed || (META.rbPts||0) < cost;
-    b.onclick = () => {
-      META.rbPts -= cost;
-      if (it.bool) META[it.key] = true;
-      else META[it.key] = (META[it.key]||0) + 1;
-      unlockAch('rebirth-shop');
-      saveMeta();
-      beep(600,.1,'square');
-      openRebirth();
-    };
-    el.appendChild(b);
-    row.appendChild(el);
-  });
-  showOverlay('rebirth-overlay', true);
+function talentLevel(it){ return it.bool ? (META[it.key] ? 1 : 0) : (META[it.key]||0); }
+
+function enterCastle(){
+  setBgm('normal');
+  renderCastle();
+  showScreen('castle-screen');
 }
-function newGameNow(){
-  clearSave(); // เริ่มเกมใหม่ = ทับเซฟเดิมทันที
+function renderCastle(){
+  $('castle-souls').textContent = META.shards.toLocaleString();
+  if ($('title-shards')) $('title-shards').textContent = META.shards.toLocaleString();
+  const wrap = $('castle-talents');
+  wrap.innerHTML = '';
+  CASTLE_TALENTS.forEach(grp => {
+    const g = document.createElement('div');
+    g.className = 'talent-group';
+    g.innerHTML = '<div class="tg-head">' + grp.group + '</div>';
+    const row = document.createElement('div');
+    row.className = 'talent-row';
+    grp.items.forEach(it => {
+      const lvl = talentLevel(it);
+      const maxed = lvl >= it.max;
+      const cost = it.cost();
+      const lvlTxt = it.bool ? (lvl ? 'ปลดล็อกแล้ว ✅' : 'ยังไม่ปลดล็อก') : ('เลเวล ' + lvl + '/' + it.max);
+      const el = document.createElement('div');
+      el.className = 'talent-card shop-item sketch';
+      el.innerHTML = '<div class="ti">'+it.icon+'</div><div class="tn">'+it.name+'</div>' +
+        '<div class="td">'+it.desc+'</div><div class="tlv">'+lvlTxt+'</div>';
+      const b = document.createElement('button');
+      b.className = 'btn';
+      b.style.fontSize = '.95rem';
+      b.textContent = maxed ? 'สูงสุดแล้ว!' : '💜 ' + cost;
+      b.disabled = maxed || META.shards < cost;
+      b.onclick = () => {
+        META.shards -= cost;
+        if (it.bool) META[it.key] = true;
+        else META[it.key] = (META[it.key]||0) + 1;
+        unlockAch('rebirth-shop');
+        saveMeta();
+        beep(600,.1,'square'); setTimeout(()=>beep(820,.1,'square',.05), 80);
+        renderCastle();
+      };
+      el.appendChild(b);
+      row.appendChild(el);
+    });
+    g.appendChild(row);
+    wrap.appendChild(g);
+  });
+}
+// ออกเดินทาง = เริ่มรันใหม่ (ทับเซฟเดิม) พร้อมบัฟถาวรที่อัปไว้
+function castleDepart(){
+  clearSave();
   setBgm('normal');
   if ((META.maxDiff || 0) > 0) chooseDifficulty(() => startStory());
   else { PENDING_DIFF = 0; startStory(); }
 }
+function newGameNow(){ enterCastle(); } // คงชื่อเดิมไว้เผื่อมีที่เรียก
 function chooseDifficulty(after){
   showScreen('game-screen');
   document.querySelector('#class-overlay h2').textContent = '⚔️ เลือกระดับความยาก';
@@ -4450,37 +4466,7 @@ function chooseDifficulty(after){
   showOverlay('class-overlay', true);
 }
 
-const SHOP = [
-  { key:'pLv', icon:'⚔️', name:'พลังมารแต่กำเนิด', desc:()=>'พลังเริ่มต้น +15%/เลเวล<br>(ปัจจุบัน Lv.'+META.pLv+')', cost:()=>10 + META.pLv*10, max:99 },
-  { key:'hLv', icon:'❤️', name:'ร่างอมตะ', desc:()=>'เลือดสูงสุดเริ่มต้น +20/เลเวล<br>(ปัจจุบัน Lv.'+META.hLv+')', cost:()=>10 + META.hLv*10, max:99 },
-  { key:'uLv', icon:'🔮', name:'รอยร้าวของผนึก', desc:()=>'เริ่มเกมพร้อมปลดผนึก +1<br>(ปัจจุบัน Lv.'+META.uLv+'/2)', cost:()=>60 + META.uLv*60, max:2 },
-];
-function renderShop(){
-  $('go-shards').textContent = META.shards.toLocaleString();
-  const row = $('shop-row');
-  row.innerHTML = '';
-  SHOP.forEach(it => {
-    const cost = it.cost();
-    const maxed = META[it.key] >= it.max;
-    const el = document.createElement('div');
-    el.className = 'shop-item sketch';
-    el.innerHTML = '<div class="icon">'+it.icon+'</div><div class="sname">'+it.name+'</div><div class="sdesc">'+it.desc()+'</div>';
-    const b = document.createElement('button');
-    b.className = 'btn';
-    b.style.fontSize = '.95rem';
-    b.textContent = maxed ? 'เต็มแล้ว!' : '💜 ' + cost;
-    b.disabled = maxed || META.shards < cost;
-    b.onclick = () => {
-      META.shards -= cost;
-      META[it.key]++;
-      saveMeta();
-      beep(600,.1,'square');
-      renderShop();
-    };
-    el.appendChild(b);
-    row.appendChild(el);
-  });
-}
+// (ร้านค้าวิญญาณเดิม + ร้านพรเกิดใหม่ ถูกรวมเข้าปราสาทจอมมารแล้ว)
 
 // ============================================================
 // BOOT
