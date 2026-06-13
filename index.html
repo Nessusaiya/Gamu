@@ -245,6 +245,21 @@
   .ach-item .aname { font-family:'Mali',cursive; font-weight:700; font-size:.93rem; }
   .ach-item .adesc { font-size:.78rem; opacity:.75; line-height:1.35; }
 
+  /* ---- bestiary ---- */
+  #bestiary-grid { max-width:720px; max-height:64vh; overflow-y:auto; padding:6px; }
+  .bs-stage-head { font-family:'Mali',cursive; font-weight:700; color:#7d3c98; margin:12px 0 6px; transform:rotate(-.5deg); }
+  .bs-row { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
+  .bs-card { width:96px; padding:8px 6px; text-align:center; cursor:pointer; transition:transform .1s; }
+  .bs-card:hover { transform:scale(1.06) rotate(-2deg); }
+  .bs-card.locked { opacity:.5; filter:grayscale(1); cursor:default; }
+  .bs-card .bs-art { width:54px; margin:0 auto; }
+  .bs-card .bs-name { font-size:.74rem; font-family:'Mali',cursive; font-weight:700; line-height:1.15; }
+  .bs-card .bs-kills { font-size:.68rem; opacity:.7; }
+  #bestiary-detail-box .bd-art { width:120px; margin:0 auto 6px; }
+  #bestiary-detail-box .bd-name { font-family:'Mali',cursive; font-weight:700; font-size:1.3rem; }
+  #bestiary-detail-box .bd-lore { font-size:.95rem; line-height:1.6; margin:10px 0; opacity:.85; }
+  #bestiary-detail-box .bd-stat { font-size:.92rem; line-height:1.7; text-align:left; display:inline-block; }
+
   /* ---- dice ---- */
   .dice-roll { font-size:3.4rem; display:inline-block; animation:diceShake .12s infinite; }
   @keyframes diceShake { 0%{transform:rotate(-14deg);} 50%{transform:rotate(14deg);} 100%{transform:rotate(-14deg);} }
@@ -468,6 +483,7 @@
       <button class="btn big" id="newgame-btn" onclick="enterCastle()">🏰 เข้าปราสาทจอมมาร</button>
       <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center;">
         <button class="btn small" onclick="openAch()">🏆 ความสำเร็จ (<span id="title-ach">0</span>)</button>
+        <button class="btn small" onclick="openBestiary()">📖 สมุดมอนสเตอร์</button>
         <button class="btn small" onclick="openSettings()">⚙️ ตั้งค่า</button>
         <button class="btn small" onclick="openTransfer('export')">📤 ย้ายเซฟไปเครื่องอื่น</button>
         <button class="btn small" onclick="openTransfer('import')">📥 นำเข้าเซฟ</button>
@@ -499,6 +515,7 @@
       <button class="btn small" onclick="openDeckView('view')">🃏 เด็ค <b id="hud-deck">0</b> ใบ</button>
       <button class="btn small" onclick="openStatus()">😈 สถานะ</button>
       <button class="btn small" onclick="openMap()">🗺️ แผนที่</button>
+      <button class="btn small" onclick="openBestiary()">📖</button>
       <button class="btn small" onclick="openAch()">🏆</button>
       <button class="btn small" onclick="openSettings()">⚙️</button>
       <span class="stat">🎭 <b id="hud-class">-</b></span>
@@ -653,6 +670,19 @@
     <h2 id="ach-title">🏆 ความสำเร็จ</h2>
     <div id="ach-grid"></div>
     <button class="btn" style="margin-top:14px;" onclick="showOverlay('ach-overlay', false)">ปิด</button>
+  </div>
+
+  <!-- ================= BESTIARY OVERLAY ================= -->
+  <div id="bestiary-overlay" class="overlay">
+    <h2 id="bestiary-title">📖 สมุดมอนสเตอร์</h2>
+    <div id="bestiary-grid"></div>
+    <button class="btn" style="margin-top:14px;" onclick="showOverlay('bestiary-overlay', false)">ปิด</button>
+  </div>
+
+  <!-- ================= BESTIARY DETAIL OVERLAY ================= -->
+  <div id="bestiary-detail" class="overlay">
+    <div id="bestiary-detail-box" class="sketch" style="max-width:520px; width:100%; padding:22px 24px; text-align:center;"></div>
+    <button class="btn" style="margin-top:14px;" onclick="showOverlay('bestiary-detail', false)">ปิด</button>
   </div>
 
   <!-- ================= BOSS INTRO ================= -->
@@ -1018,6 +1048,15 @@ const ART = {
     '<path d="M54 68 Q60 73 66 68"/>' +
     '<path d="M60 30 Q58 18 64 12 M52 34 Q44 28 44 18 M68 34 Q76 28 76 18"/>' +
     '<path d="M30 70 L22 72 M90 70 L98 72 M34 50 L26 46 M86 50 L94 46"/>'
+  ),
+  soda: svgWrap(
+    '<path d="M40 30 L80 30 L76 104 Q60 110 44 104 Z"/>' +
+    '<path d="M40 44 L80 44"/>' +
+    '<path d="M52 22 L52 30 M68 22 L68 30 M52 22 Q60 16 68 22"/>' +
+    '<circle class="fill" cx="54" cy="64" r="3"/><circle class="fill" cx="66" cy="64" r="3"/>' +
+    '<path d="M52 78 Q60 86 68 78"/>' +
+    '<path d="M48 54 L46 50 M60 52 L60 46 M72 54 L74 50 M50 92 L48 96 M70 92 L72 96 M60 94 L60 99"/>' +
+    '<path d="M30 60 Q22 64 26 72 M90 60 Q98 64 94 72"/>'
   )
 };
 
@@ -1189,7 +1228,7 @@ function hashPw(s){
   return 'h'+(h>>>0).toString(36);
 }
 function defaultMeta(){ return { shards:0, pLv:0, hLv:0, uLv:0, gLv:0, wins:0, runs:0, tutorialDone:false, ach:{}, classesPlayed:{}, totalKills:0, rbPts:0, rbAtk:0, rbEnergy:0, summonSlot3:false, maxDiff:0,
-  critLv:0, blockLv:0, armorLv:0, calmLv:0, goldStartLv:0, itemStartLv:0, summonLv:0, handLv:0, throneLv:0 }; }
+  critLv:0, blockLv:0, armorLv:0, calmLv:0, goldStartLv:0, itemStartLv:0, summonLv:0, handLv:0, throneLv:0, bestiary:{} }; }
 function acct(){ return DB.users[USER]; }
 
 function loginMsg(t){ $('login-msg').textContent = t || ''; }
@@ -1551,6 +1590,8 @@ const ITEM_DEFS = {
   // ไอเทมกากๆ (ได้จากทอยเต๋าพลาด — ไม่ดรอปปกติ)
   rock:   { icon:'🪨', name:'ก้อนหินธรรมดา', desc:'ปาใส่ศัตรู ดาเมจ 50% พลัง ...กากมาก', battleOnly:true },
   rotten: { icon:'🥩', name:'เนื้อเน่า', desc:'ฟื้นเลือด 5% แต่เครียด +1 ...จะกินจริงดิ', battleOnly:false },
+  // 🥤 รางวัลจากนักรบน้ำอัดลม
+  softdrink: { icon:'🥤', name:'น้ำอัดลมในตำนาน', desc:'เรียกนักรบน้ำอัดลม! โล่ 100% + ล้างเครียด แลกเลือด 10% (ใช้ตอนสู้)', battleOnly:true },
 };
 const ITEM_KEYS = ['potion','tea','meat','bomb','elixir','dice']; // ดรอปเฉพาะของดี
 const MAX_ITEMS = 6;
@@ -1634,6 +1675,7 @@ function shakeHard(){
 }
 function hitFlash(id){
   const el = $(id);
+  if (!el) return;
   el.classList.remove('hitflash'); void el.offsetWidth; el.classList.add('hitflash');
 }
 
@@ -1681,6 +1723,7 @@ const ACH = [
   { id:'nightmare-clear', icon:'😱', name:'ฝ่าฝันร้าย', desc:'ครองโลกสำเร็จในโหมดฝันร้าย' },
   { id:'hell-clear', icon:'🔥', name:'ราชันแห่งนรก', desc:'ครองโลกสำเร็จในโหมดนรก' },
   { id:'poison-master', icon:'☠️', name:'นักปรุงพิษ', desc:'สะสมพิษใส่ศัตรูตัวเดียว 10 สแตคขึ้นไป' },
+  { id:'soda-survive', icon:'🥤', name:'มิตรภาพน้ำอัดลม', desc:'อยู่รอดจนนักรบน้ำอัดลมบินจากไป (Easter Egg!)' },
   { id:'alchemist', icon:'⚗️', name:'นักเล่นแร่แปรธาตุ', desc:'หลอมการ์ดสถานะสำเร็จครั้งแรก' },
 ];
 let achQueue = [];
@@ -1721,6 +1764,62 @@ function openAch(){
     grid.appendChild(el);
   });
   showOverlay('ach-overlay', true);
+}
+
+// ---------- 📖 สมุดมอนสเตอร์ ----------
+function bestiaryDisplayName(art){
+  const en = (META.bestiary||{})[art];
+  if (en && en.name) return en.name.replace(/\s*(🛡️|💥|🚫|📈|💚).*$/,'').replace(/^⭐\s*/,'').trim();
+  // fallback จากชื่อในพูล/บอส
+  for (const p of ENEMY_POOLS){ const f = p.list.find(x=>x[0]===art); if (f) return f[1]; }
+  if (BOSS_NAMES){ for (const k in BOSS_NODES){ if (BOSS_NODES[k]===art) return BOSS_NAMES[k]; } }
+  const r = RARES.find(x=>x.art===art); if (r) return r.name;
+  if (art === 'soda') return SODA.name;
+  if (art === 'imp') return 'สมุนแสงจิ๋ว';
+  return art;
+}
+function openBestiary(){
+  const total = BESTIARY_STAGES.reduce((a,s)=>a+s.arts.length, 0);
+  const found = BESTIARY_STAGES.reduce((a,s)=>a + s.arts.filter(art=>(META.bestiary||{})[art]).length, 0);
+  $('bestiary-title').textContent = '📖 สมุดมอนสเตอร์ (' + found + '/' + total + ')';
+  const grid = $('bestiary-grid');
+  grid.innerHTML = '';
+  BESTIARY_STAGES.forEach(stage => {
+    const head = document.createElement('div');
+    head.className = 'bs-stage-head';
+    head.textContent = stage.name;
+    grid.appendChild(head);
+    const row = document.createElement('div');
+    row.className = 'bs-row';
+    stage.arts.forEach(art => {
+      const en = (META.bestiary||{})[art];
+      const el = document.createElement('div');
+      el.className = 'bs-card sketch' + (en ? '' : ' locked');
+      if (en){
+        el.innerHTML = '<div class="bs-art">'+ART[art]+'</div><div class="bs-name">'+bestiaryDisplayName(art)+'</div><div class="bs-kills">☠️ '+(en.kills||0)+'</div>';
+        el.onclick = () => openBestiaryDetail(art);
+      } else {
+        el.innerHTML = '<div class="bs-art" style="opacity:.4;">'+ART.question+'</div><div class="bs-name">???</div><div class="bs-kills">ยังไม่พบ</div>';
+      }
+      row.appendChild(el);
+    });
+    grid.appendChild(row);
+  });
+  showOverlay('bestiary-overlay', true);
+}
+function openBestiaryDetail(art){
+  const en = (META.bestiary||{})[art];
+  if (!en) return;
+  const items = Object.keys(en.items||{});
+  const itemTxt = items.length
+    ? items.map(k => (ITEM_DEFS[k] ? ITEM_DEFS[k].icon + ' ' + ITEM_DEFS[k].name : k) + ' ×' + en.items[k]).join('<br>')
+    : '— ยังไม่เคยดรอปไอเทม —';
+  $('bestiary-detail-box').innerHTML =
+    '<div class="bd-art">'+ART[art]+'</div>' +
+    '<div class="bd-name">'+bestiaryDisplayName(art)+'</div>' +
+    '<div class="bd-lore">📜 '+(LORE[art] || 'ยังไม่มีบันทึกตำนาน...')+'</div>' +
+    '<div class="bd-stat">👁️ พบเจอ: <b>'+(en.seen||0)+'</b> ครั้ง<br>☠️ สังหารแล้ว: <b>'+(en.kills||0)+'</b> ตน<br><br>🎁 <b>ไอเทมที่เคยได้:</b><br>'+itemTxt+'</div>';
+  showOverlay('bestiary-detail', true);
 }
 
 // ============================================================
@@ -1864,10 +1963,18 @@ function newSummon(key){
   return { key, name:d.name, lv:1, xp:0, mult:1, abil:[] };
 }
 function summonNextLv(sm){
-  if (sm.lv === 1) return 3;
-  if (sm.lv === 2) return 8;
-  if (sm.lv === 3 && META.summonSlot3 && sm.abil.length < 3) return 15;
+  // ลดค่าอาหารให้โตง่ายขึ้น (เดิม 3/8/15)
+  if (sm.lv === 1) return 2;
+  if (sm.lv === 2) return 4;
+  if (sm.lv === 3 && META.summonSlot3 && sm.abil.length < 3) return 6;
   return null;
+}
+// มอบสกิลสุ่มให้ซัมมอน (ใช้ตอนเริ่มเกมที่ปราสาทดันเลเวล — กันช่องว่าง "เลเวลสูงแต่ไม่มีสกิล")
+function grantRandomAbil(sm){
+  const maxSlots = META.summonSlot3 ? 3 : 2;
+  if (sm.abil.length >= maxSlots) return;
+  const avail = Object.keys(SUMMON_ABIL).filter(k => !sm.abil.includes(k));
+  if (avail.length) sm.abil.push(pick(avail));
 }
 
 const CLASSES = [
@@ -1935,7 +2042,7 @@ function applyClass(c){
   c.cards.forEach(id => S.deck.push(id));
   if (c.genCard) S.deck.push(c.genCard); // การ์ดสกิลหลอมประจำสาย
   const sm0 = newSummon(c.summonKey);
-  for (let i = 0; i < (META.summonLv||0) && sm0.lv < 3; i++){ sm0.lv++; sm0.mult += (sm0.lv === 2 ? .4 : .6); }
+  for (let i = 0; i < (META.summonLv||0) && sm0.lv < 3; i++){ sm0.lv++; sm0.mult += (sm0.lv === 2 ? .4 : .6); grantRandomAbil(sm0); }
   S.summons = [ sm0 ];
   applyClassVisual();
   if (!META.classesPlayed) META.classesPlayed = {};
@@ -2036,10 +2143,11 @@ function summonOneStrike(sm, after){
     for (let k = 0; k < hits; k++){
       const targets = h.aoe ? aliveEnemies() : (curTarget() ? [curTarget()] : []);
       targets.forEach(e => {
+        const ei = enemies.indexOf(e);
+        if (e.invuln){ spawnText($('battle-area'), '🥤 บล็อก!', null, 'auto', .45 + ei*.18, .35); return; }
         let d = h.dmg * sm.mult * (1 - (e.guardPct || 0)) * (e.debuffs.vuln > 0 ? 1.3 : 1);
         e.hp -= d;
         total += d;
-        const ei = enemies.indexOf(e);
         spawnText($('battle-area'), h.label + ' ' + fmt(d), null, h.crit ? 'crit' : 'auto', .45 + ei*.18, rand(.25,.45));
         hitFlash('eart-' + ei);
         if (h.burn) applyDebuff(e, 'burn', h.burn);
@@ -2048,7 +2156,7 @@ function summonOneStrike(sm, after){
         if (sm.abil.includes('blaze')) applyDebuff(e, 'burn', 1);
       });
       if (sm.abil.includes('sweep') && !h.aoe){
-        aliveEnemies().filter(e => e !== curTarget()).forEach(e => {
+        aliveEnemies().filter(e => e !== curTarget() && !e.invuln).forEach(e => {
           const d = h.dmg * sm.mult * .5 * (1 - (e.guardPct||0));
           e.hp -= d;
           spawnText($('battle-area'), '🌪️ ' + fmt(d), null, 'auto', .45 + enemies.indexOf(e)*.18, .4);
@@ -2355,6 +2463,86 @@ const RARES = [
     note:'ชอบยัดฝันร้ายใส่เด็ค ฆ่าได้รับเศษวิญญาณ +10' },
 ];
 
+// ============================================================
+// ARCHETYPE มอนสเตอร์ — เอกลักษณ์/กิมมิคต่างกัน
+// ============================================================
+const ARCH_DEF = {
+  normal: { tag:'', hpM:1,   atkM:1   },
+  tank:   { tag:'🛡️ เกราะหนา', hpM:1.8, atkM:.55, guardy:true },        // เลือดเยอะ ตีเบา ชอบตั้งรับ
+  glass:  { tag:'💥 แก้วจอมพลัง', hpM:.5,  atkM:1.7 },                    // เลือดบาง ตีโคตรแรง
+  immune: { tag:'🚫 ภูมิคุ้มกัน', hpM:1.15, atkM:1.05, debuffImmune:true },// ไม่ติดดีบัฟใดๆ
+  buffer: { tag:'📈 เสริมพลัง', hpM:1.25, atkM:.7, buffy:true },          // ชอบบัฟตัวเอง ไม่ค่อยตี
+  healer: { tag:'💚 เยียวยา', hpM:1.05, atkM:.85, healy:true },           // ฮีลพวกพ้อง
+};
+// art → archetype (เฉพาะมอนธรรมดา; บอส/แรร์ไม่ใช้)
+const ENEMY_ARCH = {
+  slime:'normal', adventurer:'normal', soldier:'tank',
+  archer:'glass', priest:'healer', knight:'tank',
+  mage:'immune', swordsman:'glass', paladin:'buffer',
+  assassin:'glass', angel:'buffer',
+};
+// ชุดสกิลตาม archetype (override พฤติกรรม)
+const ARCH_SKILLS = {
+  tank:   [['guard',.5],['attack',.35],['charge',.15]],
+  glass:  [['attack',.7],['double',.3]],
+  immune: [['attack',.55],['curse:confusion',.25],['charge',.2]],
+  buffer: [['buff',.45],['attack',.3],['guard',.25]],
+  healer: [['heal',.45],['attack',.3],['scare',.25]],
+};
+
+// ตำนานมอนสเตอร์ (Bestiary lore)
+const LORE = {
+  slime:'เกิดจากหยดน้ำมนตร์ที่จอมมารองค์ก่อนทำหก สไลม์กบฏฝันอยากเป็นราชาเมือกผู้ปลดแอกเผ่าเมือกจากการเป็นด่านแรกของทุกเกม',
+  adventurer:'เด็กหนุ่มผู้ขายวัวซื้อดาบ ออกผจญภัยเพราะกิลด์สัญญาว่าจะได้ค่าหัวจอมมาร แต่ยังตีสไลม์ไม่แตกเลยด้วยซ้ำ',
+  soldier:'ทหารเกณฑ์ผู้เฝ้าชายแดนมากว่า 20 ปี ภูมิใจในโล่ประจำตระกูลที่กันได้ทุกอย่าง ยกเว้นความเบื่อ',
+  archer:'นักธนูหลวงสายตาคมกริบ ยิงแม่นจนเล่ากันว่าเคยปักแอปเปิลบนหัวลูกตัวเอง... แต่ลูกไม่ยอมคุยด้วยอีกเลย',
+  priest:'นักบวชแห่งแสงผู้สวดมนต์เยียวยาพวกพ้อง เชื่อว่าจอมมารแค่ "เด็กที่ขาดความรัก" (คิดผิดมหันต์)',
+  knight:'อัศวินเกราะเหล็กผู้สาบานปกป้องอาณาจักร เกราะหนักจนเดินช้า แต่ทุบทีเดียวก็พอแล้ว',
+  mage:'จอมเวทฝึกหัดที่อ่านตำราต้านคำสาปจนจำขึ้นใจ ดีบัฟทั้งหลายจึงลื่นไถลผ่านตัวไปหมด',
+  swordsman:'นักดาบพเนจรไร้สังกัด ฟันไวกว่าเงา แต่ลืมใส่เกราะเพราะมันหนัก',
+  paladin:'พาลาดินผู้ภักดี สวดบทเสริมพลังให้ตัวเองก่อนรบเสมอ จนบางครั้งลืมลงมือรบ',
+  assassin:'นักฆ่าแห่งกิลด์เงา เก่งกาจเรื่องพิษและการลอบกัด แต่ตัวเปราะราวกระดาษ',
+  angel:'เทวทูตแห่งฟ้าที่เทพธิดาส่งมา เปล่งรัศมีเสริมพลังตัวเองตลอด เชื่อว่าแสงสว่างคือคำตอบของทุกสิ่ง',
+  holyknight:'อัศวินศักดิ์สิทธิ์ ผู้พิทักษ์ผนึกชั้นแรกของเทพธิดา ดาบเรืองแสงเคยปราบจอมมารมาแล้ว 65 องค์',
+  archmage:'จอมเวทแห่งหอคอย ผู้ล่วงรู้ความลับว่าเทพธิดาเองก็เป็นคนต่างโลก จึงถูกกักไว้บนหอคอยตลอดกาล',
+  golddragon:'มังกรทองแห่งแสง เฝ้าเส้นทางสู่สวรรค์มาพันปี ไม่ใช่สัตว์เลี้ยงของใคร และไม่เคยยอมแพ้ใคร... จนวันนี้',
+  hero:'ผู้กล้าผมทอง เพื่อนร่วมชะตารถบรรทุกของเจ้า ค้นพบความจริงเรื่องเทพธิดาก่อนใคร และฝากความหวังไว้กับจอมมาร',
+  goddess:'เทพธิดาแห่งแสง ผู้ถูกอัญเชิญหมายเลข 1 ผนึกพลังผู้มาใหม่ทุกคนเพราะกลัวถูกแซง และเก็บเกี่ยววิญญาณต่างโลกมาเป็นเสบียง',
+  goldslime:'สไลม์ที่กลืนสมบัติทั้งคลังจนตัวเป็นทองคำ ขี้ขลาดสุดๆ พบเห็นยากยิ่งกว่าโชคลาภ',
+  mimic:'ปีศาจหีบสมบัติที่กินนักผจญภัยโลภมากมานับไม่ถ้วน อมไอเทมของเหยื่อไว้เต็มท้อง',
+  nightmare:'ฝันร้ายเร่ร่อนที่คืบคลานในความมืด หล่อเลี้ยงด้วยความหวาดกลัว ชอบยัดฝันร้ายใส่ใจผู้คน',
+  soda:'นักรบน้ำอัดลมในตำนาน! ผู้มาจากมิติโฆษณา พกโล่ซ่าแรงดันสูง ไม่มีใครเคยทำมันแตกได้ ปรากฏตัวแวบเดียวแล้วบินจากไป 🥤',
+  imp:'สมุนแสงจิ๋วที่เทพเรียกมากวนใจ ตัวเล็กแต่ปากจัด',
+};
+
+// ☄️ Easter Egg: นักรบน้ำอัดลม
+const SODA = { art:'soda', name:'🥤 นักรบน้ำอัดลม', fleeTurn:7 };
+
+// ---------- 📖 สมุดมอนสเตอร์ (Bestiary) ----------
+function bestiaryEntry(art){
+  if (!META.bestiary) META.bestiary = {};
+  if (!META.bestiary[art]) META.bestiary[art] = { seen:0, kills:0, items:{}, cards:{} };
+  return META.bestiary[art];
+}
+function bestiarySee(e){
+  if (!e || !e.art) return;
+  const en = bestiaryEntry(e.art);
+  en.seen = (en.seen||0) + 1;
+  en.name = e.name; // เก็บชื่อที่พบล่าสุด
+}
+function bestiaryKill(art){ const en = bestiaryEntry(art); en.kills = (en.kills||0) + 1; saveMeta(); }
+function bestiaryDrop(art, itemKey){ const en = bestiaryEntry(art); en.items[itemKey] = (en.items[itemKey]||0) + 1; }
+// รายชื่อมอนสเตอร์แยกตามด่าน (สำหรับสมุด)
+const BESTIARY_STAGES = [
+  { name:'🌼 ด่าน 1 ทุ่งหญ้า', arts:['slime','adventurer','soldier'] },
+  { name:'🍂 ด่าน 2 ป่าใบไม้ร่วง', arts:['archer','priest'] },
+  { name:'💎 ด่าน 3 ถ้ำคริสตัล', arts:['knight','mage','swordsman'] },
+  { name:'❄️ ด่าน 4 ภูเขาหิมะ', arts:['paladin','assassin'] },
+  { name:'⛩️ ด่าน 5 วิหารเวหา', arts:['angel'] },
+  { name:'👑 บอสผู้พิทักษ์', arts:['holyknight','archmage','golddragon','hero','goddess'] },
+  { name:'✨ มอนสเตอร์หายาก & ลับ', arts:['goldslime','mimic','nightmare','soda','imp'] },
+];
+
 // ---------- multi-enemy helpers ----------
 function aliveEnemies(){ return enemies.filter(e => e.hp > 0); }
 function curTarget(){
@@ -2368,8 +2556,20 @@ function makeUnit(o){
   return Object.assign({
     hp:1, maxHp:1, atk:1, gold:0, art:'slime', name:'?', isBoss:false, tier:1,
     rare:null, charged:false, guardPct:0, intent:null, minion:false,
+    arch:'normal', debuffImmune:false, invuln:false, buffed:0, sodaTurns:0,
     debuffs:{ poison:0, burn:0, weak:0, vuln:0 }
   }, o);
+}
+// สร้างศัตรูธรรมดาตาม archetype (ปรับเลือด/พลัง + ตั้งค่าเอกลักษณ์)
+function makeFoe(art, name, baseHp, baseAtk, baseGold){
+  const arch = ENEMY_ARCH[art] || 'normal';
+  const ad = ARCH_DEF[arch];
+  const hp = Math.ceil(baseHp * ad.hpM);
+  const tag = ad.tag ? ' ' + ad.tag : '';
+  return makeUnit({
+    hp, maxHp:hp, atk:Math.ceil(baseAtk * ad.atkM), gold:Math.ceil(baseGold),
+    art, name:name + tag, arch, debuffImmune: !!ad.debuffImmune
+  });
 }
 // ระดับความยาก: 0=ปกติ 1=ฝันร้าย 2=นรก
 const DIFFS = [
@@ -2403,6 +2603,7 @@ function startBattle(tier, overrides){
   enemies = [];
   S.target = 0;
 
+  let isSoda = false, isSquad = false, isMob = false;
   if (tier === 4){
     const rare = pick(RARES);
     const hp = Math.ceil(baseHp * rare.hpMul * 1.5);
@@ -2417,22 +2618,45 @@ function startBattle(tier, overrides){
     }
     if (node >= 20) spawnMinion(); // บอสยุคหลังมาพร้อมสมุนกวนใจ
   } else if (tier === 2){
-    const e = pick(pool.list);
-    const hp = Math.ceil(baseHp * 2);
-    enemies.push(makeUnit({ hp, maxHp:hp, atk:Math.ceil(baseAtk*1.4), gold:Math.ceil(baseGold*2.5), art:e[0], name:'⭐ '+e[1], tier:2 }));
-  } else {
-    let count = 1;
-    if (node > 4 && chance(.5)) count++;
-    if (node > 12 && chance(.4)) count++;
-    count = Math.min(3, count);
-    const atkMul = count === 1 ? 1 : (count === 2 ? .65 : .5);
-    for (let i = 0; i < count; i++){
+    // เส้นทางอันตราย: RNG — 45% หัวหน้าเดี่ยวโหด / 55% ฝูงรุมสวอร์ม!
+    if (chance(.45)){
       const e = pick(pool.list);
-      const hp = Math.ceil(baseHp / count * rand(.85, 1.15));
-      enemies.push(makeUnit({ hp, maxHp:hp, atk:Math.ceil(baseAtk*atkMul), gold:Math.ceil(baseGold/count)+2, art:e[0], name:e[1], tier:1 }));
+      const f = makeFoe(e[0], '⭐ '+e[1], baseHp*2.2, baseAtk*1.4, baseGold*2.5);
+      f.tier = 2; enemies.push(f);
+    } else {
+      isMob = true;
+      const n = node > 18 ? 3 : (chance(.5) ? 3 : 2);
+      for (let i = 0; i < n; i++){
+        const e = pick(pool.list);
+        const f = makeFoe(e[0], e[1], baseHp*0.95, baseAtk*0.62, baseGold*1.1);
+        f.tier = 2; enemies.push(f);
+      }
+    }
+  } else {
+    // ศึกปกติ: ลุ้นเจอ "นักรบน้ำอัดลม" (Easter Egg ~3%) หรือ "กองกำลังนักผจญภัย" หรือฝูง 1-3 ตัว
+    if (node > 2 && chance(.03)){
+      isSoda = true;
+      enemies.push(makeUnit({ hp:1, maxHp:1, atk:0, gold:0, art:'soda', name:SODA.name, tier:1, invuln:true, debuffImmune:true, sodaTurns:0 }));
+    } else if (node > 6 && node <= 30 && chance(.16)){
+      // กองกำลังนักผจญภัย — ทีมที่สู้ประสานงานกัน (นักบวชฮีลพวกพ้อง)
+      isSquad = true;
+      const party = [ ['adventurer','นักผจญภัย (หัวหน้าปาร์ตี้)'], ['archer','นักธนูปาร์ตี้'], ['priest','นักบวชปาร์ตี้'] ];
+      party.forEach(p => { const f = makeFoe(p[0], p[1], baseHp*0.8, baseAtk*0.62, baseGold*0.8); enemies.push(f); });
+    } else {
+      let count = 1;
+      if (chance(.45)) count++;
+      if (node > 6 && chance(.4)) count++;
+      count = Math.min(3, count);
+      const split = count === 1 ? 1 : (count === 2 ? .62 : .48);
+      for (let i = 0; i < count; i++){
+        const e = pick(pool.list);
+        const f = makeFoe(e[0], e[1], baseHp/count * rand(.85,1.15), baseAtk*split, Math.ceil(baseGold/count)+2);
+        enemies.push(f);
+      }
     }
   }
-  if (overrides) Object.assign(enemies[0], overrides);
+  if (overrides){ Object.assign(enemies[0], overrides); enemies[0].arch = enemies[0].arch || 'normal'; }
+  enemies.forEach(e => bestiarySee(e));   // บันทึกลงสมุดมอนสเตอร์
 
   S.inBattle = true;
   S.turnNum = 0;
@@ -2456,7 +2680,19 @@ function startBattle(tier, overrides){
   enemies.forEach(decideIntent);
   const lead = enemies[0];
 
-  if (lead.tier === 4){
+  if (isSoda){
+    banner('🥤✨ นักรบน้ำอัดลมปรากฏตัว!! ทำมันแตกไม่ได้หรอก — รอด 7 เทิร์นมันจะบินหนี!');
+    S.keepBanner = true;
+    beep(660,.1,'square',.06); setTimeout(()=>beep(990,.1,'square',.06),120); setTimeout(()=>beep(1320,.18,'square',.06),240);
+  } else if (isMob){
+    banner('⚠️ เส้นทางอันตราย → โดนฝูงศัตรูรุมสวอร์ม ' + enemies.length + ' ตัว!!');
+    S.keepBanner = true;
+    beep(160,.2,'sawtooth',.05);
+  } else if (isSquad){
+    banner('🛡️⚔️ กองกำลังนักผจญภัยจัดทัพมา! (นักบวชจะคอยฮีลพวกพ้อง)');
+    S.keepBanner = true;
+    beep(330,.12,'square',.05); setTimeout(()=>beep(440,.12,'square',.05),120);
+  } else if (lead.tier === 4){
     banner('✨ มอนสเตอร์หายากปรากฏตัว!! — ' + (lead.rare.note || ''));
     S.keepBanner = true;
     beep(880, .12, 'square', .05); setTimeout(()=>beep(1100,.15,'square',.05), 130);
@@ -2490,15 +2726,18 @@ function startBattle(tier, overrides){
   }
 }
 
+function debuffTotal(e){ const d=e.debuffs; return d.poison+d.burn+d.weak+d.vuln; }
 function decideIntent(e){
   if (!e) return;
-  // ระหว่างบทเรียน ศัตรูโจมตีอย่างเดียว (ให้เนื้อหาสอนตรงจริง)
+  if (e.art === 'soda'){ e.intent = 'soda'; return; }     // น้ำอัดลม: ยืนเฉยๆ คงโล่
+  // ระหว่างบทเรียน ศัตรูโจมตีอย่างเดียว
   if (S.tutorialPending && S.node === 1){ e.intent = 'attack'; return; }
-  // สไลม์ทองคำเตรียมหนีตั้งแต่เทิร์น 3 (หนีจริงเทิร์น 4)
   if (e.rare && e.rare.flees && S.turnNum >= 3){ e.intent = 'flee'; return; }
   if (e.charged){ e.intent = 'attack'; return; }
-  let moves = (e.minion ? ENEMY_SKILLS.minion : ENEMY_SKILLS[e.art]) || [['attack',.7],['charge',.15],['scare',.15]];
-  // บอสเรียกสมุนไม่ได้ถ้าเต็มแล้ว
+  // ชำระล้างดีบัฟ: ถ้าโดนซ้อนเยอะ มีโอกาสยอมเสียเทิร์นมาล้าง (เปิดช่องให้ผู้เล่น)
+  if (!e.debuffImmune && debuffTotal(e) >= 5 && chance(.6)){ e.intent = 'cleanse'; return; }
+  // ชุดสกิลตาม archetype (ถ้ามี) ไม่งั้นใช้ของ art
+  let moves = (e.minion ? ENEMY_SKILLS.minion : (ARCH_SKILLS[e.arch] || ENEMY_SKILLS[e.art])) || [['attack',.7],['charge',.15],['scare',.15]];
   if (!e.isBoss || enemies.filter(m => m.minion && m.hp > 0).length >= 2){
     moves = moves.filter(m => m[0] !== 'summon');
   }
@@ -2518,6 +2757,9 @@ function intentText(e){
   if (it === 'double') return '⚔️⚔️ ~' + fmt(e.atk*.65*weakMul) + '×2';
   if (it === 'flee') return '💨 จะเผ่นหนี!!';
   if (it === 'summon') return '✨ เรียกสมุน!';
+  if (it === 'buff') return '📈 เสริมพลังตัวเอง';
+  if (it === 'cleanse') return '✨ ชำระล้างดีบัฟ (เปิดช่อง!)';
+  if (it === 'soda') return '🥤 ซ่าจัด! (อยู่ยงคงกระพัน)';
   if (it.startsWith('curse:')) return '🃏 ยัดการ์ดขยะ!';
   return '…';
 }
@@ -2604,6 +2846,13 @@ function drawCards(n){
 
 function startPlayerTurn(){
   if (!S.inBattle) return;
+  // 🥤 นักรบน้ำอัดลม: นับเทิร์น ครบ 7 แล้วบินหนี (พร้อมรางวัล)
+  const soda = aliveEnemies().find(e => e.art === 'soda');
+  if (soda){
+    soda.sodaTurns = (soda.sodaTurns||0) + 1;
+    soda.guardPct = 0;
+    if (soda.sodaTurns > SODA.fleeTurn){ sodaFlee(soda); return; }
+  }
   S.turnNum++;
   S.playerTurn = true;
   S.energy = S.maxEnergy;
@@ -2632,6 +2881,14 @@ function startPlayerTurn(){
 // ดาเมจการ์ด/ซัมมอนใส่ศัตรู 1 ตัว (รวม buff/debuff/เครียด)
 function hitEnemy(e, rawMult, opts){
   opts = opts || {};
+  // อยู่ยงคงกระพัน (นักรบน้ำอัดลม) — กันทุกดาเมจ
+  if (e.invuln){
+    const i = enemies.indexOf(e);
+    spawnText($('battle-area'), '🥤 บล็อก 100%!', null, 'auto', .45 + i*.18, rand(.25,.4));
+    hitFlash('eart-' + i);
+    beep(900, .05, 'square', .03);
+    return 0;
+  }
   let dmg = S.power * rawMult;
   if (opts.flat) dmg += opts.flat;
   const isCrit = !opts.noCrit && chance(S.crit);
@@ -2655,6 +2912,10 @@ function hitEnemy(e, rawMult, opts){
 }
 function applyDebuff(e, key, n){
   if (!e || e.hp <= 0 || !n) return;
+  if (e.debuffImmune){
+    spawnText($('battle-area'), '🚫 ภูมิคุ้มกัน!', null, 'auto', .5 + enemies.indexOf(e)*.15, .5);
+    return;
+  }
   e.debuffs[key] = (e.debuffs[key] || 0) + n;
   if (key === 'poison' && e.debuffs.poison >= 10) unlockAch('poison-master');
   const ICONS = { poison:'☠️', burn:'🔥', weak:'💫', vuln:'🎯' };
@@ -2969,10 +3230,26 @@ function enemyActAll(qi){
     spawnText($('battle-area'), '🛡️ ตั้งรับ!', null, 'auto', .6, .3);
     beep(260, .12, 'triangle', .04);
   } else if (it === 'heal'){
-    const h = Math.ceil(e.maxHp * .12);
-    e.hp = Math.min(e.maxHp, e.hp + h);
-    spawnText($('battle-area'), '💚 +' + fmt(h), null, 'heal', .6, .3);
+    // ฮีลพวกพ้องที่เลือดน้อยสุด (รวมตัวเอง) — ทีมสู้ประสานงาน
+    const allies = aliveEnemies();
+    const tgt = allies.reduce((a,b)=> (b.hp/b.maxHp < a.hp/a.maxHp ? b : a), allies[0]) || e;
+    const h = Math.ceil(tgt.maxHp * .15);
+    tgt.hp = Math.min(tgt.maxHp, tgt.hp + h);
+    spawnText($('battle-area'), '💚 +' + fmt(h), null, 'heal', .5 + enemies.indexOf(tgt)*.15, .3);
     beep(420, .12, 'triangle', .04);
+  } else if (it === 'buff'){
+    e.buffed = (e.buffed||0) + 1;
+    e.atk = Math.ceil(e.atk * 1.35);
+    spawnText($('battle-area'), '📈 พลังเพิ่ม!', null, 'crit', .5 + enemies.indexOf(e)*.15, .3);
+    beep(300, .12, 'square', .04); setTimeout(()=>beep(420,.1,'square',.04), 80);
+  } else if (it === 'cleanse'){
+    e.debuffs = { poison:0, burn:0, weak:0, vuln:0 };
+    spawnText($('battle-area'), '✨ ชำระล้างดีบัฟ!', null, 'heal', .5 + enemies.indexOf(e)*.15, .3);
+    beep(520, .12, 'triangle', .05); setTimeout(()=>beep(660,.1,'triangle',.05), 80);
+  } else if (it === 'soda'){
+    // น้ำอัดลม: ไม่ทำอะไร แค่คงโล่ + บางทียั่ว
+    spawnText($('battle-area'), '🥤 ซู่ซ่า~', null, 'auto', .6, .3);
+    beep(880, .06, 'square', .03);
   } else if (it === 'summon'){
     if (spawnMinion()){
       spawnText($('battle-area'), '✨ เรียกสมุนแสง!', null, 'stress', .6, .3);
@@ -3005,6 +3282,33 @@ function endBattleEscape(){
   setBgm('normal');
   renderBattle(); renderHand();
   setTimeout(showPaths, 1500);
+}
+
+// 🥤 นักรบน้ำอัดลมบินหนี (รอด 7 เทิร์น) — แฟลช + เสียง + มอบ "น้ำอัดลม"
+function sodaFlee(soda){
+  S.inBattle = false;
+  S.playerTurn = false;
+  enemies = [];
+  unlockAch('soda-survive');
+  // ภาพแฟลชขาวจ้า + เสียงบินหวือ
+  const f = $('flash-999');
+  f.querySelector('.n999').textContent = '🥤💨';
+  f.querySelector('.t999').textContent = '「ซ่าสุด... แล้วพบกันใหม่!」';
+  f.classList.add('active');
+  beep(1320,.1,'square',.07); setTimeout(()=>beep(1660,.1,'square',.07),90); setTimeout(()=>beep(2000,.25,'square',.07),180);
+  setTimeout(()=>beep(880,.4,'sine'? 'triangle':'triangle',.05), 300);
+  setTimeout(()=>{
+    f.classList.remove('active');
+    f.querySelector('.n999').textContent = '999,999,999';
+    f.querySelector('.t999').textContent = '「นี่สิ... พลังที่แท้จริงของข้า!!!」';
+    if (S.items.length < MAX_ITEMS) S.items.push('softdrink');
+    bestiaryDrop('soda', 'softdrink');
+    saveMeta();
+    banner('🥤 นักรบน้ำอัดลมบินจากไป... ทิ้ง "น้ำอัดลมในตำนาน" ไว้ให้!');
+    setBgm('normal');
+    renderBattle(); renderHand(); updateHud();
+    setTimeout(showPaths, 1400);
+  }, 1500);
 }
 
 // ---------- stress ----------
@@ -3066,7 +3370,7 @@ function useUnseal(){
   setTimeout(()=>{
     f.classList.remove('active');
     if (S.inBattle && aliveEnemies().length){
-      aliveEnemies().forEach(e => { e.hp -= 999999999; });
+      aliveEnemies().forEach(e => { if (!e.invuln) e.hp -= 999999999; });
       spawnText($('battle-area'), '💥 999,999,999!!', null, 'crit');
       renderBattle();
       if (!aliveEnemies().length) winBattle();
@@ -3081,6 +3385,7 @@ function winBattle(){
   S.playerTurn = false;
   const lead = enemies[0] || {};
   const killCount = enemies.length;
+  enemies.forEach(e => { if (e.art) bestiaryKill(e.art); }); // 📖 บันทึกการสังหารลงสมุด
   S.kills += killCount;
   S.battles++;
   const g = Math.ceil(enemies.reduce((a,e)=>a+e.gold, 0) * S.goldMul);
@@ -3099,6 +3404,7 @@ function winBattle(){
   for (let i=0; i<dropCount && S.items.length < MAX_ITEMS; i++){
     const dropped = pick(ITEM_KEYS);
     S.items.push(dropped);
+    if (lead.art) bestiaryDrop(lead.art, dropped); // 📖 บันทึกไอเทมที่ได้จากมอนนี้
     spawnText($('battle-area'), ITEM_DEFS[dropped].icon + ' ได้ ' + ITEM_DEFS[dropped].name + '!', null, 'heal', .5, .4 + i*.12);
   }
   if (rare && rare.shards){
@@ -4197,7 +4503,8 @@ function useItem(i){
   else if (id === 'meat'){ S.hp = Math.min(S.maxHp, S.hp + S.maxHp*.25); addStress(-1); spawnText($('battle-area'), '🍖 อร่อย!', null, 'heal', .15, .4); }
   else if (id === 'bomb'){
     const t = curTarget();
-    if (t){
+    if (t && t.invuln){ spawnText($('battle-area'), '🥤 บล็อก!', null, 'auto', .5, .35); }
+    else if (t){
       const dmg = S.power * 2.5 * (1 - (t.guardPct || 0));
       t.hp -= dmg;
       spawnText($('battle-area'), '💣 ' + fmt(dmg) + '!', null, 'crit');
@@ -4205,6 +4512,15 @@ function useItem(i){
       hitFlash('eart-' + enemies.indexOf(t));
       shakeHard();
     }
+  }
+  else if (id === 'softdrink'){
+    // เรียกนักรบน้ำอัดลม 1 เทิร์น: โล่ 100% + ล้างเครียด แลกเลือด 10%
+    S.blockPct = 1; S.blockFlat = (S.blockFlat||0) + 9999;
+    S.stress = 0;
+    S.hp = Math.max(1, S.hp - Math.ceil(S.maxHp*.1));
+    fxBurst('player', '🥤', true);
+    spawnText($('battle-area'), '🥤 โล่ซ่า 100% + ล้างเครียด!', null, 'heal', .15, .4);
+    beep(660,.1,'square',.06); setTimeout(()=>beep(990,.12,'square',.06),110);
   }
   else if (id === 'elixir'){ S.energy += 2; spawnText($('battle-area'), '⚡ +2 พลังงาน', null, 'heal', .4, .5); }
   else if (id === 'dice'){ const g = Math.ceil(rand(50,300)); S.gold += g; spawnText($('battle-area'), '🎲 +' + fmt(g) + ' 💰', null, 'heal', .4, .4); }
