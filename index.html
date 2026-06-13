@@ -249,6 +249,41 @@
   .dice-roll { font-size:3.4rem; display:inline-block; animation:diceShake .12s infinite; }
   @keyframes diceShake { 0%{transform:rotate(-14deg);} 50%{transform:rotate(14deg);} 100%{transform:rotate(-14deg);} }
 
+  /* ---- big dice-roll overlay (build cards / bridge) ---- */
+  #dice-fx { position:fixed; inset:0; z-index:54; display:none; justify-content:center; align-items:center; flex-direction:column; background:#211a17e8; }
+  #dice-fx.active { display:flex; animation:fadeIn .12s; }
+  #dice-fx-cap { font-family:'Mali',cursive; font-weight:700; color:#ffe9a8; font-size:1.3rem; margin-bottom:18px; letter-spacing:2px; opacity:.9; }
+  #dice-fx-die {
+    width:min(190px,40vw); height:min(190px,40vw);
+    background:#fffdf7; border:5px solid #2a2a2a; border-radius:24% / 24%;
+    display:flex; justify-content:center; align-items:center;
+    font-family:'Mali',cursive; font-weight:700; font-size:min(110px,22vw); color:#2a2a2a;
+    box-shadow:5px 7px 0 #0008;
+  }
+  #dice-fx-die.rolling { animation:diceTumble .1s steps(1) infinite; }
+  @keyframes diceTumble { 0%{transform:rotate(-18deg) translateY(0);} 50%{transform:rotate(18deg) translateY(-14px) scale(1.06);} 100%{transform:rotate(-18deg) translateY(0);} }
+  #dice-fx-die.land { animation:diceLand .45s ease-out; }
+  @keyframes diceLand { 0%{transform:scale(1.7) rotate(6deg);} 55%{transform:scale(.82) rotate(0);} 100%{transform:scale(1) rotate(0);} }
+  #dice-fx-die.win  { box-shadow:5px 7px 0 #0008, 0 0 34px 6px #57a05a; border-color:#2f6e33; }
+  #dice-fx-die.fail { box-shadow:5px 7px 0 #0008, 0 0 34px 6px #e2574c; border-color:#8a2b22; }
+  #dice-fx-label { font-family:'Mali',cursive; font-weight:700; font-size:1.9rem; margin-top:22px; opacity:0; text-align:center; }
+  #dice-fx-label.show { opacity:1; animation:jitter .28s steps(2) 3; }
+  #dice-fx-label.win { color:#8fe39a; text-shadow:0 0 16px #57a05a; }
+  #dice-fx-label.partial { color:#ffe07a; text-shadow:0 0 14px #e7b73c; }
+  #dice-fx-label.fail { color:#ff8f82; text-shadow:0 0 16px #e2574c; }
+  .dice-spark { position:absolute; font-size:1.6rem; pointer-events:none; z-index:55; animation:fxPop .6s forwards; }
+
+  /* ---- speech bubbles (summon chatter / enemy taunt) ---- */
+  #summon-bubble, #taunt-bubble {
+    position:absolute; top:-4px; max-width:62%; z-index:6; display:none;
+    background:#fffdf7; border:2.5px solid #2a2a2a; padding:6px 11px;
+    font-size:.82rem; line-height:1.35; box-shadow:2px 3px 0 #2a2a2a33;
+  }
+  #summon-bubble { left:2px; border-radius:14px 14px 14px 3px; }
+  #taunt-bubble  { right:2px; text-align:right; border-radius:14px 14px 3px 14px; background:#fff0ee; }
+  #summon-bubble.show, #taunt-bubble.show { display:block; animation:bubblePop .25s; }
+  @keyframes bubblePop { 0%{ transform:scale(.5) translateY(8px); opacity:0; } 100%{ transform:scale(1) translateY(0); opacity:1; } }
+
   /* ---- multi-enemy row ---- */
   #enemy-row { display:flex; gap:6px; justify-content:center; align-items:flex-start; flex-wrap:wrap; }
   .enemy-unit {
@@ -465,6 +500,7 @@
     <div id="battle-area" class="sketch">
       <div id="battle-bg"></div>
       <div id="player-side">
+        <div id="summon-bubble"></div>
         <div class="char-name">เจ้า (จอมมาร)</div>
         <div id="player-art" class="wobble-slow"></div>
         <div class="hpbar"><div id="player-hpfill" class="hpfill green" style="width:100%"></div><div class="hptext" id="player-hptext"></div></div>
@@ -474,6 +510,7 @@
         <div id="summon-list" style="display:flex; gap:8px; margin-top:6px; justify-content:center; flex-wrap:wrap;"></div>
       </div>
       <div id="enemy-side">
+        <div id="taunt-bubble"></div>
         <div id="enemy-row"></div>
         <div style="font-size:.8rem; opacity:.5; text-align:center;">👆 แตะศัตรูเพื่อเลือกเป้าหมาย</div>
       </div>
@@ -659,6 +696,13 @@
   <div id="flash-999">
     <div class="n999">999,999,999</div>
     <div class="t999">「นี่สิ... พลังที่แท้จริงของข้า!!!」</div>
+  </div>
+
+  <!-- ================= DICE ROLL FX ================= -->
+  <div id="dice-fx">
+    <div id="dice-fx-cap">🎲 ทอยเต๋าชะตา 🎲</div>
+    <div id="dice-fx-die">?</div>
+    <div id="dice-fx-label"></div>
   </div>
 
   <footer>วาดด้วยหมึกแห่งความมืด ✒️ — การ์ดเทิร์นเบส Roguelike ด่านเดียวยาวๆ</footer>
@@ -1403,9 +1447,9 @@ const CARD_DEFS = {
   bloodPact:   { icon:'🍷', name:'สัญญาเลือด', cost:1, type:'skill', rarity:'common', desc:'ฟื้นเลือด 18% (ล้นเป็นพลังเดือด)', healPct:.18,
                  ups:[ { name:'จอกเลือดศักดิ์สิทธิ์', desc:'ฟื้นเลือด 30% (ล้นได้)', healPct:.30 },
                        { name:'สัญญาแลกเปลี่ยน', desc:'ฟื้นเลือด 18% + จั่ว 1', draw:1 } ] },
-  corpseWave:  { icon:'🧟', name:'คลื่นผีดิบ', cost:2, type:'atk', rarity:'common', desc:'ดาเมจ 120% + พิษ 1', dmg:1.2, poison:1,
-                 ups:[ { name:'สึนามิผีดิบ', desc:'ดาเมจ 180% + พิษ 1', dmg:1.8 },
-                       { name:'คลื่นพิษระบาด', desc:'ดาเมจ 120% + พิษ 3', poison:3 } ] },
+  corpseWave:  { icon:'🧟', name:'คลื่นผีดิบ', cost:2, type:'atk', rarity:'common', desc:'ดาเมจ 120% + พิษ 2', dmg:1.2, poison:2,
+                 ups:[ { name:'สึนามิผีดิบ', desc:'ดาเมจ 180% + พิษ 2', dmg:1.8 },
+                       { name:'คลื่นพิษระบาด', desc:'ดาเมจ 120% + พิษ 4', poison:4 } ] },
   harvest:     { icon:'🌾', name:'เก็บเกี่ยววิญญาณ', cost:1, type:'atk', rarity:'common', desc:'ดาเมจ 50% +3%/สังหารในรัน (สูงสุด +300%)', dmg:.5, killScale:true,
                  ups:[ { name:'ฤดูเก็บเกี่ยว', desc:'ดาเมจ 90% +3%/สังหาร', dmg:.9 },
                        { name:'เคียวเก็บพิษ', desc:'ดาเมจ 50% +สเกล + พิษ 1', poison:1 } ] },
@@ -1415,9 +1459,9 @@ const CARD_DEFS = {
   dragonHeart: { icon:'❤️‍🔥', name:'หัวใจมังกร', cost:1, type:'skill', rarity:'common', desc:'เพลิงมังกร: การ์ดโจมตีใบถัดไป ×2', dfire:true,
                  ups:[ { name:'หัวใจจักรพรรดิ', desc:'เพลิงมังกร ×2 + จั่ว 1', draw:1 },
                        { name:'หัวใจเหล็กไหล', desc:'เพลิงมังกร ×2 + บล็อก 30%', block:.3 } ] },
-  kingSlash:   { icon:'👑', name:'ดาบราชัน', cost:1, type:'atk', rarity:'common', desc:'ดาเมจ 90% + บล็อก 20%', dmg:.9, block:.2,
-                 ups:[ { name:'ดาบราชันกล้า', desc:'ดาเมจ 140% + บล็อก 20%', dmg:1.4 },
-                       { name:'ดาบราชันมั่นคง', desc:'ดาเมจ 90% + บล็อก 40%', block:.4 } ] },
+  kingSlash:   { icon:'👑', name:'ดาบราชัน', cost:1, type:'atk', rarity:'common', desc:'ดาเมจ 105% + บล็อก 20%', dmg:1.05, block:.2,
+                 ups:[ { name:'ดาบราชันกล้า', desc:'ดาเมจ 155% + บล็อก 20%', dmg:1.55 },
+                       { name:'ดาบราชันมั่นคง', desc:'ดาเมจ 105% + บล็อก 40%', block:.4 } ] },
   royalGuard:  { icon:'🏰', name:'ปราการราชัน', cost:1, type:'def', rarity:'common', desc:'บล็อก 50% + กัน 8 หน่วย', block:.5, blockFlat:8,
                  ups:[ { name:'ปราการเหล็กกล้า', desc:'บล็อก 60% + กัน 16 หน่วย', block:.6, blockFlat:16 },
                        { name:'ปราการตอบโต้', desc:'บล็อก 50% + กัน 8 + โมเมนตัม 1', momentum:1 } ] },
@@ -1441,13 +1485,13 @@ const CARD_DEFS = {
                  ups:[ { name:'โล่พิพากษา', desc:'ดาเมจ 180% +สเกลบล็อก', dmg:1.8 },
                        { name:'โล่สะท้านปฐพี', desc:'ดาเมจ 100% +สเกล + เปราะบาง 1', vuln:1 } ] },
   // ---- การ์ดสกิลหลอมการ์ดสถานะ (มีกลไกทอยเต๋าพลาด!) ----
-  brewPoison:  { icon:'⚗️', name:'หลอมยาพิษ', cost:1, type:'skill', rarity:'common', desc:'ทอยเต๋า: หลอม "ขวดยาพิษ" 2-3 ใบ (เสี่ยงพลาด!)', create:{ card:'poisonVial', min:2, max:3, dud:'spoiledBrew' },
-                 ups:[ { name:'หลอมยาพิษเข้มข้น', desc:'หลอมขวดยาพิษ 3-4 ใบ (เสี่ยงพลาด)', create:{ card:'poisonVial', min:3, max:4, dud:'spoiledBrew' } },
-                       { name:'สูตรพิษมั่นคง', desc:'หลอมขวดยาพิษ 2-3 ใบ (พลาดยากขึ้น)', create:{ card:'poisonVial', min:2, max:3, dud:'spoiledBrew', safe:true } } ] },
+  brewPoison:  { icon:'⚗️', name:'หลอมยาพิษ', cost:1, type:'skill', rarity:'common', desc:'🎲 ครั้งเดียว/ศึก: หลอม "ขวดยาพิษ" 2-3 ใบ (เสี่ยงพลาด!)', create:{ card:'poisonVial', min:2, max:3, dud:'spoiledBrew' },
+                 ups:[ { name:'หลอมยาพิษเข้มข้น', desc:'🎲 ครั้งเดียว/ศึก: ขวดยาพิษ 3-4 ใบ', create:{ card:'poisonVial', min:3, max:4, dud:'spoiledBrew' } },
+                       { name:'สูตรพิษมั่นคง', desc:'🎲 ครั้งเดียว/ศึก: ขวดยาพิษ 2-3 ใบ (พลาดยากขึ้น)', create:{ card:'poisonVial', min:2, max:3, dud:'spoiledBrew', safe:true } } ] },
   poisonVial:  { icon:'🧪', name:'ขวดยาพิษ', cost:0, type:'atk', rarity:'common', desc:'ดาเมจ 30% + พิษ 2 (การ์ดหลอม ชั่วคราว)', dmg:.3, poison:2 },
-  stokeEmber:  { icon:'⚗️', name:'เพาะเพลิงนรก', cost:1, type:'skill', rarity:'common', desc:'ทอยเต๋า: หลอม "ขวดเพลิง" 2-3 ใบ (เสี่ยงพลาด!)', create:{ card:'emberVial', min:2, max:3, dud:'spoiledBrew' },
-                 ups:[ { name:'เพาะเพลิงมหากาฬ', desc:'หลอมขวดเพลิง 3-4 ใบ (เสี่ยงพลาด)', create:{ card:'emberVial', min:3, max:4, dud:'spoiledBrew' } },
-                       { name:'สูตรเพลิงมั่นคง', desc:'หลอมขวดเพลิง 2-3 ใบ (พลาดยากขึ้น)', create:{ card:'emberVial', min:2, max:3, dud:'spoiledBrew', safe:true } } ] },
+  stokeEmber:  { icon:'⚗️', name:'เพาะเพลิงนรก', cost:1, type:'skill', rarity:'common', desc:'🎲 ครั้งเดียว/ศึก: หลอม "ขวดเพลิง" 2-3 ใบ (เสี่ยงพลาด!)', create:{ card:'emberVial', min:2, max:3, dud:'spoiledBrew' },
+                 ups:[ { name:'เพาะเพลิงมหากาฬ', desc:'🎲 ครั้งเดียว/ศึก: ขวดเพลิง 3-4 ใบ', create:{ card:'emberVial', min:3, max:4, dud:'spoiledBrew' } },
+                       { name:'สูตรเพลิงมั่นคง', desc:'🎲 ครั้งเดียว/ศึก: ขวดเพลิง 2-3 ใบ (พลาดยากขึ้น)', create:{ card:'emberVial', min:2, max:3, dud:'spoiledBrew', safe:true } } ] },
   emberVial:   { icon:'🔥', name:'ขวดเพลิง', cost:0, type:'atk', rarity:'common', desc:'ดาเมจ 30% + ไฟลวก 2 (การ์ดหลอม ชั่วคราว)', dmg:.3, burn:2 },
   spoiledBrew: { icon:'🤢', name:'ยาเสื่อม', cost:0, type:'curse', desc:'หลอมพลาด! เล่นทิ้งฟรี / ค้างมือ: เครียด +1 แล้วสลาย', selfStress:1 },
   // ---- การ์ดขยะ (ศัตรูยัดใส่ — ค้างมือตอนจบเทิร์น = ออกฤทธิ์แล้วสลาย) ----
@@ -1770,10 +1814,10 @@ function endTutorial(){
 const SUMMON_DEFS = {
   // พื้นฐานประจำอาชีพ
   skeleton: { name:'🦴 อัศวินกระดูก', art:'skeleton', hit:s=>({ dmg:s.power*1.0, label:'🦴' }) },
-  imp:      { name:'🔥 อิมป์เพลิงนรก', art:'imp', hit:s=>({ dmg:s.power*.8, label:'🔥', burn:1 }) },
+  imp:      { name:'🔥 อิมป์เพลิงนรก', art:'imp', hit:s=>({ dmg:s.power*.85, label:'🔥', burn:1 }) },
   bats:     { name:'🦇 ฝูงค้างคาวเลือด', art:'bats', hit:s=>({ dmg:s.power*.85, label:'🦇', healPct:.65 }) },
   zombie:   { name:'🧟 ซอมบี้ผู้ภักดี', art:'zombie', hit:s=>({ dmg:s.power*Math.min(2.6, .7 + s.kills*.03), label:'🧟' }) },
-  whelp:    { name:'🐉 ลูกมังกรทมิฬ', art:'whelp', hit:s=>{ const big = Math.random()<.5; return { dmg:s.power*(big?1.8:.7), label:big?'🔥':'🐉', crit:big }; } },
+  whelp:    { name:'🐉 ลูกมังกรทมิฬ', art:'whelp', hit:s=>{ const big = Math.random()<.5; return { dmg:s.power*(big?1.7:.7), label:big?'🔥':'🐉', crit:big }; } },
   golem:    { name:'🗿 โกเลมโล่หิน', art:'golem', hit:s=>({ dmg:s.power*.85, label:'🗿', blockFlat:5 }) },
   // ซัมมอนพิเศษ Tier 2 (เลือก 1 ตอนวิวัฒน์ — เอกลักษณ์คนละแบบ)
   hound:    { name:'🐺 เฮลฮาวด์', art:'whelp', hit:s=>({ dmg:s.power*1.6, label:'🐺' }) },
@@ -1784,7 +1828,7 @@ const SUMMON_DEFS = {
   mistmaid: { name:'🌫️ เมดสายหมอก', art:'nightmare', hit:s=>({ dmg:s.power*.6, label:'🌫️', blockFlat:6 }) },
   lich:     { name:'💀 ลิชน้อย', art:'skeleton', hit:s=>({ dmg:s.power*1.1, label:'💀', poison:1 }) },
   abom:     { name:'🧟 ผีดิบมหึมา', art:'zombie', hit:s=>({ dmg:s.power*.6, label:'🧟', aoe:true, poison:1 }) },
-  drake:    { name:'🐲 เดรกทมิฬ', art:'whelp', hit:s=>{ const big = Math.random()<.45; return { dmg:s.power*(big?2.4:.5), label:'🐲', crit:big }; } },
+  drake:    { name:'🐲 เดรกทมิฬ', art:'whelp', hit:s=>{ const big = Math.random()<.45; return { dmg:s.power*(big?2.2:.5), label:'🐲', crit:big }; } },
   wyrm:     { name:'🔥 เวิร์มเพลิง', art:'golddragon', hit:s=>({ dmg:s.power*.55, label:'🔥', aoe:true, burn:1 }) },
   golem2:   { name:'🗿 โกเลมโล่ผนึก', art:'golem', hit:s=>({ dmg:s.power*.9, label:'🗿', blockFlat:8 }) },
   knightShade:{ name:'⚔️ อัศวินเงา', art:'knight', hit:s=>({ dmg:s.power*(1 + (s.blockPct||0)*2), label:'⚔️' }) },
@@ -2197,6 +2241,14 @@ function continueRun(){
     else if (c) S.summons = [ newSummon(c.summonKey) ];
     else S.summons = [];
   }
+  // กันสกิล/ค่าซัมมอนหาย: เติมฟิลด์ที่ขาดจากเซฟเก่าให้ครบทุกตัว
+  S.summons.forEach(sm => {
+    if (!Array.isArray(sm.abil)) sm.abil = [];
+    if (typeof sm.lv !== 'number') sm.lv = 1;
+    if (typeof sm.xp !== 'number') sm.xp = 0;
+    if (typeof sm.mult !== 'number') sm.mult = 1;
+    if (!sm.name && SUMMON_DEFS[sm.key]) sm.name = SUMMON_DEFS[sm.key].name;
+  });
   applyClassVisual();
   setBgm('normal');
   $('player-art').innerHTML = ART.darklord;
@@ -2365,6 +2417,9 @@ function startBattle(tier, overrides){
   S.tookDmgThisBattle = false;
   S.buffs = { str:0, momentum:0, dfire:false };
   S._bloodOver = 0;
+  S.builtThisBattle = false;     // การ์ดหลอม: ครั้งเดียวต่อศึก
+  S.lastChatterTurn = -99;       // คุมความถี่ซัมมอนพูด
+  S.lastTauntTurn = -99;         // คุมความถี่ศัตรูยั่ว
   S.drawPile = shuffle(S.deck);
   S.discardPile = [];
   S.hand = [];
@@ -2450,6 +2505,65 @@ function debuffText(e){
   return s.join(' ');
 }
 
+// ---------- ฟองคำพูด: ซัมมอนขอข้าว/บอกทิป & ศัตรูยั่ว (คุมความถี่ ไม่สแปม) ----------
+const SUMMON_FOOD_LINES = [
+  '🍖 หิวจังเลย... ป้อนไอเทมข้าหน่อยน้า~',
+  '🍗 ท้องร้องแล้วนะนาย มีของกินไหม?',
+  '🦴 ป้อนข้าหน่อย เดี๋ยวตีแรงให้เลย!',
+];
+function summonTip(){
+  const tips = [];
+  if (aliveEnemies().some(e => e.intent === 'charge')) tips.push('💡 ศัตรูกำลังชาร์จ! กันไว้หรือรีบฆ่ามันก่อนนะ');
+  if (aliveEnemies().some(e => (e.intent||'').startsWith('curse'))) tips.push('💡 มันจะยัดการ์ดขยะ! เล่นทิ้งซะอย่าให้ค้างมือ');
+  if (S.hp < S.maxHp*.35) tips.push('💡 เลือดน้อยแล้วนาย ระวังตัวด้วย!');
+  if (aliveEnemies().some(e => e.debuffs.poison>0 || e.debuffs.burn>0)) tips.push('💡 พิษ/ไฟกำลังกัดมันอยู่ ยื้อเวลาได้นะ');
+  if (S.unseal>0 && aliveEnemies().length && !aliveEnemies().some(e=>e.isBoss)) tips.push('💡 ศึกนี้ไม่ใช่บอส ปลดผนึกล้างได้เลย!');
+  if (aliveEnemies().length >= 2) tips.push('💡 ศัตรูหลายตัว การ์ดกวาด (AoE) คุ้มกว่านะ');
+  if (!tips.length) tips.push('💪 ลุยเลยนาย! ข้าอยู่ข้างเจ้าเสมอ');
+  return pick(tips);
+}
+function showBubble(id, text){
+  const b = $(id);
+  if (!b) return;
+  b.classList.remove('show'); void b.offsetWidth;
+  b.innerHTML = text;
+  b.classList.add('show');
+  clearTimeout(b._t);
+  b._t = setTimeout(()=>b.classList.remove('show'), 3200);
+}
+function summonChatter(){
+  if (!S.summons || !S.summons.length) return;
+  if (S.turnNum - (S.lastChatterTurn||-99) < 3) return;   // เว้นอย่างน้อย 3 เทิร์น
+  if (!chance(.30)) return;                                 // ~30% เมื่อถึงคิว
+  S.lastChatterTurn = S.turnNum;
+  const hungry = S.summons.some(sm => summonNextLv(sm) != null);
+  let line;
+  if (hungry && S.items.length > 0 && chance(.5)) line = pick(SUMMON_FOOD_LINES);
+  else line = summonTip();
+  const who = pick(S.summons);
+  showBubble('summon-bubble', '<b>' + who.name + ':</b> ' + line);
+  beep(620, .05, 'square', .025);
+}
+const TAUNTS = [
+  'จอมมารกระจอก! พลังแค่นี้เองเหรอ? 😏',
+  'นี่หรือจอมมารผู้ยิ่งใหญ่? ขำกลิ้ง!',
+  'กลับไปนอนในโลงซะไป๊ เจ้าปีศาจตัวน้อย!',
+  'พลัง 999 ล้านที่ว่า... หายไปไหนหมดล่ะ?',
+  'ข้าจะส่งเจ้ากลับไปเกิดใหม่อีกรอบ! 😈',
+  'เทพธิดาผนึกเจ้าไว้ถูกแล้ว อ่อนแอจริงๆ',
+];
+function maybeTaunt(){
+  if (S.turnNum - (S.lastTauntTurn||-99) < 3) return;
+  const foes = aliveEnemies().filter(e => !e.minion);
+  if (!foes.length) return;
+  if (!chance(.10)) return;                                 // โอกาสต่ำ ~10%
+  S.lastTauntTurn = S.turnNum;
+  const e = pick(foes);
+  const i = enemies.indexOf(e);
+  showBubble('taunt-bubble', '<b>' + e.name + ':</b><br>' + pick(TAUNTS));
+  beep(180, .12, 'sawtooth', .04);
+}
+
 function drawCards(n){
   for (let i=0; i<n; i++){
     if (S.hand.length >= 8) break;
@@ -2486,6 +2600,7 @@ function startPlayerTurn(){
   renderBattle();
   renderHand();
   tutOnPlayerTurn();
+  if (!TUT.active) setTimeout(summonChatter, 500); // ซัมมอนพูด (คุมความถี่ในฟังก์ชัน)
 }
 
 // ดาเมจการ์ด/ซัมมอนใส่ศัตรู 1 ตัว (รวม buff/debuff/เครียด)
@@ -2542,6 +2657,23 @@ function playCard(idx){
   const id = S.hand[idx];
   const c = getCard(id);
   if (!c || c.cost > S.energy) return;
+
+  // การ์ดหลอม (create): ใช้ได้ครั้งเดียวต่อศึก และ exhaust (ไม่วนกลับเด็คในไฟต์นี้)
+  if (c.create){
+    if (S.builtThisBattle){
+      banner('⚗️ หลอมได้ครั้งเดียวต่อศึก!');
+      beep(150,.18,'sawtooth',.05);
+      return; // ไม่เสียพลังงาน ไม่ทิ้งการ์ด
+    }
+    S.energy -= c.cost;
+    S.hand.splice(idx, 1);       // exhaust: ไม่ push เข้า discard → ไม่ถูกจั่วซ้ำในศึกนี้
+    S.builtThisBattle = true;
+    doCreateCards(c.create);
+    tutOnPlay(c);
+    renderBattle(); renderHand();
+    return;
+  }
+
   S.energy -= c.cost;
   S.hand.splice(idx, 1);
   S.discardPile.push(id);
@@ -2608,11 +2740,66 @@ function playCard(idx){
   if (c.stress){ addStress(c.stress); }
   if (c.draw){ drawCards(c.draw); fxBurst('player', '🃏'); beep(500,.06,'square',.03); setTimeout(()=>beep(620,.06,'square',.03), 70); }
   if (c.healPct && c.type !== 'atk') healPlayer(S.maxHp * c.healPct, true);
-  if (c.create) doCreateCards(c.create);
 
   tutOnPlay(c);
   renderBattle(); renderHand();
   if (!aliveEnemies().length) winBattle();
+}
+
+// ===== ฉากทอยเต๋าเต็มจอ (ลุ้นสำเร็จ/บางส่วน/พลาด พร้อมแสงสีเสียง) =====
+// opts: { rolled, tier:'win'|'partial'|'fail', cap, label, onDone }
+function showDiceRoll(opts){
+  const fx = $('dice-fx'), die = $('dice-fx-die'), lab = $('dice-fx-label'), cap = $('dice-fx-cap');
+  cap.textContent = opts.cap || '🎲 ทอยเต๋าชะตา 🎲';
+  fx.classList.add('active');
+  die.className = 'rolling';
+  die.textContent = '?';
+  lab.className = '';
+  lab.innerHTML = '';
+  let t = 0;
+  const iv = setInterval(() => {
+    die.textContent = 1 + Math.floor(Math.random()*6);
+    beep(300 + t*28, .04, 'square', .035);
+    t++;
+  }, 90);
+  // เต๋าหมุน ~0.95 วิ แล้วลงเลข
+  setTimeout(() => {
+    clearInterval(iv);
+    die.textContent = opts.rolled;
+    die.className = 'land ' + (opts.tier === 'fail' ? 'fail' : (opts.tier === 'win' ? 'win' : ''));
+    beep(opts.tier === 'fail' ? 150 : 760, .25, opts.tier === 'fail' ? 'sawtooth' : 'square', .06);
+    // ประกายรอบเต๋า
+    const r = die.getBoundingClientRect();
+    const cx = r.left + r.width/2, cy = r.top + r.height/2;
+    const sparks = opts.tier === 'fail' ? ['💀','💢','🥀'] : (opts.tier === 'win' ? ['✨','🌟','💥','⭐'] : ['✨','💫']);
+    const cnt = opts.tier === 'win' ? 12 : (opts.tier === 'fail' ? 8 : 6);
+    for (let i = 0; i < cnt; i++){
+      const sp = document.createElement('div');
+      sp.className = 'dice-spark';
+      sp.textContent = pick(sparks);
+      const ang = (Math.PI*2/cnt)*i + rand(-.3,.3), dist = rand(60,140);
+      sp.style.left = (cx + Math.cos(ang)*dist) + 'px';
+      sp.style.top = (cy + Math.sin(ang)*dist) + 'px';
+      fx.appendChild(sp);
+      setTimeout(() => sp.remove(), 650);
+    }
+    // เผยผลลัพธ์
+    setTimeout(() => {
+      lab.className = 'show ' + opts.tier;
+      lab.innerHTML = opts.label;
+      if (opts.tier === 'win'){
+        beep(523,.1,'square',.06); setTimeout(()=>beep(659,.1,'square',.06),100); setTimeout(()=>beep(880,.2,'square',.06),210);
+      } else if (opts.tier === 'partial'){
+        beep(440,.12,'square',.05); setTimeout(()=>beep(523,.12,'square',.05),110);
+      } else {
+        beep(120,.4,'sawtooth',.06); setTimeout(()=>beep(90,.3,'sawtooth',.05),200);
+      }
+    }, 260);
+    setTimeout(() => {
+      fx.classList.remove('active');
+      if (opts.onDone) opts.onDone();
+    }, 1350);
+  }, 950);
 }
 
 // หลอมการ์ดสถานะด้วยเต๋า: ทอย 4-6 = สำเร็จเต็ม, 2-3 = ได้น้อย, 1 = พลาด (ได้ "ยาเสื่อม")
@@ -2621,24 +2808,31 @@ function doCreateCards(spec){
   unlockAch('alchemist');
   let d = 1 + Math.floor(Math.random()*6);
   if (spec.safe) d = Math.max(d, 2); // สูตรมั่นคงไม่มีทางได้ 1
-  let n;
-  if (d >= 4) n = spec.max;
-  else if (d >= 2) n = spec.min;
-  else n = 0;
-  fxBurst('player', '⚗️', true);
-  if (n === 0){
-    if (spec.dud){ if (S.hand.length < 8) S.hand.push(spec.dud); else S.discardPile.push(spec.dud); }
-    spawnText($('battle-area'), '🎲'+d+' หลอมพลาด! ได้ยาเสื่อม', null, 'stress', .3, .42);
-    beep(150,.2,'sawtooth',.05);
-  } else {
-    for (let i = 0; i < n; i++){
-      if (S.hand.length < 8) S.hand.push(spec.card);
-      else { const pos = Math.floor(Math.random()*(S.drawPile.length+1)); S.drawPile.splice(pos, 0, spec.card); }
+  let n, tier;
+  if (d >= 4){ n = spec.max; tier = 'win'; }
+  else if (d >= 2){ n = spec.min; tier = 'partial'; }
+  else { n = 0; tier = 'fail'; }
+  const made = getCard(spec.card);
+  const label = (n === 0)
+    ? '🤢 หลอมพลาด!<br>ได้ "ยาเสื่อม" ติดมือ'
+    : (tier === 'win' ? '⚗️ หลอมสำเร็จเต็มสูตร!' : '⚗️ หลอมได้บางส่วน...') + '<br>' + made.icon + ' ' + made.name + ' ×' + n;
+  showDiceRoll({
+    cap: '⚗️ กำลังหลอมการ์ด...',
+    rolled: d, tier, label,
+    onDone: () => {
+      if (n === 0){
+        if (spec.dud){ if (S.hand.length < 8) S.hand.push(spec.dud); else S.discardPile.push(spec.dud); }
+        fxBurst('player', '🤢', true);
+      } else {
+        for (let i = 0; i < n; i++){
+          if (S.hand.length < 8) S.hand.push(spec.card);
+          else { const pos = Math.floor(Math.random()*(S.drawPile.length+1)); S.drawPile.splice(pos, 0, spec.card); }
+        }
+        fxBurst('player', made.icon, true);
+      }
+      renderBattle(); renderHand();
     }
-    const made = getCard(spec.card);
-    spawnText($('battle-area'), '🎲'+d+' หลอม '+made.icon+' ×'+n+'!', null, 'heal', .3, .42);
-    beep(560,.1,'square',.05); setTimeout(()=>beep(720,.12,'square',.05), 80);
-  }
+  });
 }
 
 function endTurn(fromSkip){
@@ -2702,6 +2896,7 @@ function enemyHit(e, raw){
 // ศัตรูออกท่าทีละตัวตามคิว
 function enemyActAll(qi){
   if (!S.inBattle) return;
+  if (qi === 0) maybeTaunt(); // ศัตรูยั่วจอมมาร (โอกาสต่ำ ต้นตาศัตรู)
   const alive = aliveEnemies();
   if (qi >= alive.length){
     enemies.forEach(e => { if (e.hp > 0) decideIntent(e); });
@@ -3082,10 +3277,12 @@ function showPaths(){
       event:  ['❓ เส้นทางปริศนา', ART.question, 'อะไรก็เกิดขึ้นได้...'],
     };
     types.forEach(t => row.appendChild(doorEl(t, INFO[t][0], INFO[t][1], INFO[t][2])));
-    // หลังจบศึก: มีโอกาสเจอจุดพัก หรือ ร้านการ์ด เป็นทางเลือกเสริม
-    if (chance(.33)){
-      if (chance(.5)) row.appendChild(doorEl('camp', '⛺ จุดพักข้างทาง', ART.camp, 'ฟื้นฟู / นั่งสมาธิ / อัปเกรดการ์ด'));
-      else row.appendChild(doorEl('shop', '🏪 พ่อค้าการ์ดเร่ร่อน', ART.merchant, 'ซื้อการ์ดใหม่ / จ้างลบการ์ด'));
+    // หลังจบศึก: มี "โอกาสน้อย" เจอจุดพัก/ร้านการ์ดแบบสุ่มล้วน + คูลดาวน์กันโผล่ติดๆ
+    // (กันผู้เล่นพักรัวจนเกมง่ายเกิน — จุดพักแน่นอนมีแค่โหนด 9 ของแต่ละด่าน)
+    const sinceRest = S.node - (S.lastRestNode != null ? S.lastRestNode : -99);
+    if (sinceRest >= 3 && chance(.12)){
+      if (chance(.5)) row.appendChild(doorEl('camp', '⛺ จุดพักข้างทาง (หายาก)', ART.camp, 'ฟื้นฟู / นั่งสมาธิ / อัปเกรดการ์ด'));
+      else row.appendChild(doorEl('shop', '🏪 พ่อค้าการ์ดเร่ร่อน (หายาก)', ART.merchant, 'ซื้อการ์ดใหม่ / จ้างลบการ์ด'));
     }
   }
   showOverlay('path-overlay', true);
@@ -3096,6 +3293,7 @@ function showPaths(){
 // ============================================================
 function openCamp(){
   S.lastCampAt = S.battles;
+  S.lastRestNode = S.node;
   saveRun('camp');
   const canUpgrade = S.deck.some(id => !id.includes('+') && CARD_DEFS[id] && CARD_DEFS[id].ups);
   renderEvent(ART.camp, '⛺ ตั้งแคมป์พัก',
@@ -3152,6 +3350,7 @@ function chooseUpgradePath(idx, cancelCb){
 
 function openShop(){
   S.lastShopAt = S.battles;
+  S.lastRestNode = S.node;
   saveRun('shop');
   const cls = getClass() || {cards:[]};
   const classCards = cls.cards.concat(cls.genCard ? [cls.genCard] : []);
@@ -3541,25 +3740,18 @@ function eventAmbush(){
     ]);
 }
 
-// อีเวนต์: สะพานปีศาจ — ทอยเต๋าวัดดวง
+// อีเวนต์: สะพานปีศาจ — ทอยเต๋าวัดดวง (ใช้ฉากเต๋าเต็มจอ)
 function rollDiceAnim(target, cb){
-  const desc = $('event-desc');
-  const faces = ['⚀','⚁','⚂','⚃','⚄','⚅'];
-  $('event-choices').innerHTML = '';
-  let t = 0;
-  const iv = setInterval(() => {
-    desc.innerHTML = '<span class="dice-roll">' + faces[Math.floor(Math.random()*6)] + '</span><br>กำลังทอย...';
-    beep(280 + t*35, .04, 'square', .03);
-    t++;
-    if (t >= 11){
-      clearInterval(iv);
-      const d = 1 + Math.floor(Math.random()*6);
-      desc.innerHTML = '<span style="font-size:3.4rem;">' + faces[d-1] + '</span><br>ออก <b>' + d + '</b>! (ต้องได้ ' + target + ' ขึ้นไป)';
-      if (d === 6) unlockAch('dice-king');
-      beep(d >= target ? 700 : 150, .3, d >= target ? 'square' : 'sawtooth', .06);
-      setTimeout(() => cb(d, d >= target), 900);
-    }
-  }, 95);
+  const d = 1 + Math.floor(Math.random()*6);
+  if (d === 6) unlockAch('dice-king');
+  const ok = d >= target;
+  showDiceRoll({
+    cap: '🌉 ทอยข้ามสะพาน (ต้องได้ ' + target + '+)',
+    rolled: d,
+    tier: ok ? 'win' : 'fail',
+    label: ok ? ('🎉 ออก ' + d + ' — ผ่าน!') : ('💀 ออก ' + d + ' — พลาด!'),
+    onDone: () => cb(d, ok)
+  });
 }
 function eventDice(){
   const th = evTheme('dice');
