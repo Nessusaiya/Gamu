@@ -311,6 +311,8 @@
   .enemy-unit.dead { opacity:.25; filter:grayscale(1); cursor:default; }
   .eu-name { font-family:'Mali',cursive; font-weight:700; font-size:.85rem; text-align:center; line-height:1.2; }
   .eu-name.boss-n { color:#b3322b; }
+  .eu-cd { font-family:'Mali',cursive; font-weight:700; font-size:1.05rem; line-height:1; padding:3px 9px; background:#fffdf7; border:2.5px solid #2a2a2a; border-radius:50% 45% 50% 45%; box-shadow:1px 2px 0 #2a2a2a33; }
+  .eu-cd.done { font-size:.72rem; opacity:.6; border-style:dashed; }
   .eu-intent { font-size:.78rem; padding:1px 8px; background:#fff3d6; border:2px solid #2a2a2a; border-radius:14px 5px 14px 5px/5px 14px 5px 14px; white-space:nowrap; }
   #enemy-row.n1 .eu-art { width:150px; }
   #enemy-row.n2 .eu-art { width:110px; }
@@ -1057,6 +1059,14 @@ const ART = {
     '<path d="M52 78 Q60 86 68 78"/>' +
     '<path d="M48 54 L46 50 M60 52 L60 46 M72 54 L74 50 M50 92 L48 96 M70 92 L72 96 M60 94 L60 99"/>' +
     '<path d="M30 60 Q22 64 26 72 M90 60 Q98 64 94 72"/>'
+  ),
+  drone: svgWrap(
+    '<path d="M40 40 L80 40 L80 80 L40 80 Z"/>' +
+    '<path d="M60 24 L60 40 M60 18 Q56 14 60 12 Q64 14 60 18"/>' +
+    '<rect class="fill" x="48" y="52" width="9" height="9"/><rect class="fill" x="63" y="52" width="9" height="9"/>' +
+    '<path d="M48 70 L72 70"/>' +
+    '<path d="M40 50 L26 50 L26 64 M80 50 L94 50 L94 64"/>' +
+    '<path d="M46 80 L42 98 M74 80 L78 98 M52 80 L52 96 M68 80 L68 96"/>'
   )
 };
 
@@ -1520,7 +1530,32 @@ const CARD_DEFS = {
   royalGuard:  { icon:'🏰', name:'ปราการราชัน', cost:1, type:'def', rarity:'common', desc:'บล็อก 50% + กัน 8 หน่วย', block:.5, blockFlat:8,
                  ups:[ { name:'ปราการเหล็กกล้า', desc:'บล็อก 60% + กัน 16 หน่วย', block:.6, blockFlat:16 },
                        { name:'ปราการตอบโต้', desc:'บล็อก 50% + กัน 8 + โมเมนตัม 1', momentum:1 } ] },
+  // ---- 🗡️ จอมมารนักฆ่า ----
+  assassinate: { icon:'🗡️', name:'ลอบสังหาร', cost:1, type:'atk', rarity:'common', desc:'ดาเมจ 140% + เปราะบาง 1', dmg:1.4, vuln:1,
+                 ups:[ { name:'ปาดคอ', desc:'ดาเมจ 210% + เปราะบาง 1', dmg:2.1 },
+                       { name:'จุดตาย', desc:'ดาเมจ 140% + เปราะบาง 3', vuln:3 } ] },
+  shadowStep:  { icon:'👣', name:'ก้าวเงา', cost:1, type:'skill', rarity:'common', desc:'จั่ว 2 + การ์ดโจมตีใบถัดไป "คริแน่นอน"', draw:2, surecrit:true,
+                 ups:[ { name:'ก้าวเงาคู่', desc:'จั่ว 3 + คริแน่นอนใบถัดไป', draw:3 },
+                       { name:'ก้าวเงาเร่ง', desc:'จั่ว 2 + คริแน่นอน + โมเมนตัม 1', momentum:1 } ] },
+  // ---- 💻 จอมมารแฮกเกอร์ ----
+  systemHack:  { icon:'💻', name:'แฮ็กระบบ', cost:1, type:'skill', rarity:'common', desc:'จั่ว 1 + แฮ็กตัวนับศัตรูเป้าหมาย +2 (ออกท่าช้าลง)', draw:1, hackCd:2,
+                 ups:[ { name:'แฮ็กเจาะลึก', desc:'จั่ว 1 + ตัวนับศัตรู +3', hackCd:3 },
+                       { name:'แฮ็กแพร่กระจาย', desc:'จั่ว 1 + ตัวนับศัตรู "ทุกตัว" +2', hackCd:0, hackCdAll:2 } ] },
+  virus:       { icon:'🦠', name:'ปล่อยไวรัส', cost:1, type:'atk', rarity:'common', desc:'ดาเมจ 60% ทุกตัว + สุ่มดีบัฟ 1', dmg:.6, aoe:true, randDebuff:1,
+                 ups:[ { name:'ไวรัสกลายพันธุ์', desc:'ดาเมจ 90% ทุกตัว + สุ่มดีบัฟ 1', dmg:.9 },
+                       { name:'ไวรัสระบาด', desc:'ดาเมจ 60% ทุกตัว + สุ่มดีบัฟ 2', randDebuff:2 } ] },
+  botnet:      { icon:'🛰️', name:'ปล่อยบอตเน็ต', cost:1, type:'skill', rarity:'common', desc:'🎲 ครั้งเดียว/ศึก: ปั๊ม "บอตจิ๋ว" 2-3 ใบ (เสี่ยงพลาด!)', create:{ card:'botDrone', min:2, max:3, dud:'glitchJunk' },
+                 ups:[ { name:'บอตเน็ตหนาแน่น', desc:'🎲 ครั้งเดียว/ศึก: บอตจิ๋ว 3-4 ใบ', create:{ card:'botDrone', min:3, max:4, dud:'glitchJunk' } },
+                       { name:'บอตเน็ตเสถียร', desc:'🎲 ครั้งเดียว/ศึก: บอตจิ๋ว 2-3 ใบ (พลาดยากขึ้น)', create:{ card:'botDrone', min:2, max:3, dud:'glitchJunk', safe:true } } ] },
+  botDrone:    { icon:'🤖', name:'บอตจิ๋ว', cost:0, type:'atk', rarity:'common', desc:'ดาเมจ 40% (การ์ดปั๊ม ชั่วคราว)', dmg:.4 },
+  glitchJunk:  { icon:'🧩', name:'โค้ดเสีย', cost:0, type:'curse', desc:'คอมไพล์พลาด! เล่นทิ้งฟรี / ค้างมือ: เครียด +1 แล้วสลาย', selfStress:1 },
   // ---- Tier 2 (ได้เมื่อวิวัฒน์อาชีพ) ----
+  deathmark:   { icon:'☠️', name:'ตรามรณะ', cost:2, type:'atk', rarity:'epic', desc:'ดาเมจ 110% สามครั้ง (สุ่มเป้า) + เปราะบาง 1', dmg:1.1, hits:3, randomT:true, vuln:1,
+                 ups:[ { name:'มหาตรามรณะ', desc:'ดาเมจ 110% สี่ครั้ง + เปราะบาง 1', hits:4 },
+                       { name:'ตราพิฆาต', desc:'ดาเมจ 170% สามครั้ง + เปราะบาง 1', dmg:1.7 } ] },
+  systemCrash: { icon:'🖥️', name:'ระบบล่ม', cost:2, type:'atk', rarity:'epic', desc:'ดาเมจ 120% ทุกตัว + แฮ็กตัวนับศัตรูทุกตัว +3', dmg:1.2, aoe:true, hackCdAll:3,
+                 ups:[ { name:'บลูสกรีนมรณะ', desc:'ดาเมจ 180% ทุกตัว + ตัวนับ +3', dmg:1.8 },
+                       { name:'แรนซัมแวร์', desc:'ดาเมจ 120% ทุกตัว + ตัวนับ +4 + สุ่มดีบัฟ 1', hackCdAll:4, randDebuff:1 } ] },
   bladestorm:  { icon:'🌀', name:'พายุดาบนรก', cost:2, type:'atk', rarity:'epic', desc:'ดาเมจ 100% ทุกตัว (แรงขึ้นตามโมเมนตัม)', dmg:1.0, aoe:true,
                  ups:[ { name:'มหาพายุดาบ', desc:'ดาเมจ 150% ทุกตัว', dmg:1.5 },
                        { name:'พายุไม่สิ้นสุด', desc:'ดาเมจ 100% ทุกตัว + โมเมนตัม 1', momentum:1 } ] },
@@ -1927,27 +1962,37 @@ function endTutorial(){
 // CLASSES (6 สาย) + TIER 2 + SUMMONS (เลี้ยงได้ วิวัฒน์ได้)
 // ============================================================
 // ซัมมอนทุกตัว: hit(S) คืน {dmg, label, healPct?, aoe?, burn?, poison?, blockFlat?, crit?}
+// ซัมมอน: ดาเมจ = พลังของซัมมอนเอง (sm.pow) × ตัวคูณท่า — ไม่อิงพลังจอมมารแล้ว!
+// hit(sm, S) → { dmg, label, ... }
 const SUMMON_DEFS = {
   // พื้นฐานประจำอาชีพ
-  skeleton: { name:'🦴 อัศวินกระดูก', art:'skeleton', hit:s=>({ dmg:s.power*1.0, label:'🦴' }) },
-  imp:      { name:'🔥 อิมป์เพลิงนรก', art:'imp', hit:s=>({ dmg:s.power*.85, label:'🔥', burn:1 }) },
-  bats:     { name:'🦇 ฝูงค้างคาวเลือด', art:'bats', hit:s=>({ dmg:s.power*.85, label:'🦇', healPct:.65 }) },
-  zombie:   { name:'🧟 ซอมบี้ผู้ภักดี', art:'zombie', hit:s=>({ dmg:s.power*Math.min(2.6, .7 + s.kills*.03), label:'🧟' }) },
-  whelp:    { name:'🐉 ลูกมังกรทมิฬ', art:'whelp', hit:s=>{ const big = Math.random()<.5; return { dmg:s.power*(big?1.7:.7), label:big?'🔥':'🐉', crit:big }; } },
-  golem:    { name:'🗿 โกเลมโล่หิน', art:'golem', hit:s=>({ dmg:s.power*.85, label:'🗿', blockFlat:5 }) },
-  // ซัมมอนพิเศษ Tier 2 (เลือก 1 ตอนวิวัฒน์ — เอกลักษณ์คนละแบบ)
-  hound:    { name:'🐺 เฮลฮาวด์', art:'whelp', hit:s=>({ dmg:s.power*1.6, label:'🐺' }) },
-  valkyrie: { name:'🪽 วาลคีรีมืด', art:'angel', hit:s=>({ dmg:s.power*.6, label:'🪽', aoe:true }) },
-  wisp:     { name:'💠 วิสป์เพลิงนรก', art:'wisp', hit:s=>({ dmg:s.power*.7, label:'💠', burn:2 }) },
-  archimp:  { name:'😈 อัครอิมป์', art:'imp', hit:s=>({ dmg:s.power*.55, label:'😈', hits:2 }) },
-  batlord:  { name:'🦇 ราชาค้างคาวเลือด', art:'bats', hit:s=>({ dmg:s.power*.9, label:'🦇', healPct:.8 }) },
-  mistmaid: { name:'🌫️ เมดสายหมอก', art:'nightmare', hit:s=>({ dmg:s.power*.6, label:'🌫️', blockFlat:6 }) },
-  lich:     { name:'💀 ลิชน้อย', art:'skeleton', hit:s=>({ dmg:s.power*1.1, label:'💀', poison:1 }) },
-  abom:     { name:'🧟 ผีดิบมหึมา', art:'zombie', hit:s=>({ dmg:s.power*.6, label:'🧟', aoe:true, poison:1 }) },
-  drake:    { name:'🐲 เดรกทมิฬ', art:'whelp', hit:s=>{ const big = Math.random()<.45; return { dmg:s.power*(big?2.2:.5), label:'🐲', crit:big }; } },
-  wyrm:     { name:'🔥 เวิร์มเพลิง', art:'golddragon', hit:s=>({ dmg:s.power*.55, label:'🔥', aoe:true, burn:1 }) },
-  golem2:   { name:'🗿 โกเลมโล่ผนึก', art:'golem', hit:s=>({ dmg:s.power*.9, label:'🗿', blockFlat:8 }) },
-  knightShade:{ name:'⚔️ อัศวินเงา', art:'knight', hit:s=>({ dmg:s.power*(1 + (s.blockPct||0)*2), label:'⚔️' }) },
+  skeleton: { name:'🦴 อัศวินกระดูก', art:'skeleton', hit:(sm,S)=>({ dmg:sm.pow*1.0, label:'🦴' }) },
+  imp:      { name:'🔥 อิมป์เพลิงนรก', art:'imp', hit:(sm,S)=>({ dmg:sm.pow*.85, label:'🔥', burn:1 }) },
+  bats:     { name:'🦇 ฝูงค้างคาวเลือด', art:'bats', hit:(sm,S)=>({ dmg:sm.pow*.85, label:'🦇', healPct:.65 }) },
+  zombie:   { name:'🧟 ซอมบี้ผู้ภักดี', art:'zombie', hit:(sm,S)=>({ dmg:sm.pow*Math.min(2.6, .7 + S.kills*.02), label:'🧟' }) },
+  whelp:    { name:'🐉 ลูกมังกรทมิฬ', art:'whelp', hit:(sm,S)=>{ const big = Math.random()<.5; return { dmg:sm.pow*(big?1.7:.7), label:big?'🔥':'🐉', crit:big }; } },
+  golem:    { name:'🗿 โกเลมโล่หิน', art:'golem', hit:(sm,S)=>({ dmg:sm.pow*.85, label:'🗿', blockFlat:5 }) },
+  // ซัมมอนพิเศษ Tier 2
+  hound:    { name:'🐺 เฮลฮาวด์', art:'whelp', hit:(sm,S)=>({ dmg:sm.pow*1.6, label:'🐺' }) },
+  valkyrie: { name:'🪽 วาลคีรีมืด', art:'angel', hit:(sm,S)=>({ dmg:sm.pow*.6, label:'🪽', aoe:true }) },
+  wisp:     { name:'💠 วิสป์เพลิงนรก', art:'wisp', hit:(sm,S)=>({ dmg:sm.pow*.7, label:'💠', burn:2 }) },
+  archimp:  { name:'😈 อัครอิมป์', art:'imp', hit:(sm,S)=>({ dmg:sm.pow*.55, label:'😈', hits:2 }) },
+  batlord:  { name:'🦇 ราชาค้างคาวเลือด', art:'bats', hit:(sm,S)=>({ dmg:sm.pow*.9, label:'🦇', healPct:.8 }) },
+  mistmaid: { name:'🌫️ เมดสายหมอก', art:'nightmare', hit:(sm,S)=>({ dmg:sm.pow*.6, label:'🌫️', blockFlat:6 }) },
+  lich:     { name:'💀 ลิชน้อย', art:'skeleton', hit:(sm,S)=>({ dmg:sm.pow*1.1, label:'💀', poison:1 }) },
+  abom:     { name:'🧟 ผีดิบมหึมา', art:'zombie', hit:(sm,S)=>({ dmg:sm.pow*.6, label:'🧟', aoe:true, poison:1 }) },
+  drake:    { name:'🐲 เดรกทมิฬ', art:'whelp', hit:(sm,S)=>{ const big = Math.random()<.45; return { dmg:sm.pow*(big?2.2:.5), label:'🐲', crit:big }; } },
+  wyrm:     { name:'🔥 เวิร์มเพลิง', art:'golddragon', hit:(sm,S)=>({ dmg:sm.pow*.55, label:'🔥', aoe:true, burn:1 }) },
+  golem2:   { name:'🗿 โกเลมโล่ผนึก', art:'golem', hit:(sm,S)=>({ dmg:sm.pow*.9, label:'🗿', blockFlat:8 }) },
+  knightShade:{ name:'⚔️ อัศวินเงา', art:'knight', hit:(sm,S)=>({ dmg:sm.pow*(1 + (S.blockPct||0)*1.5), label:'⚔️' }) },
+  // ประจำ จอมมารนักฆ่า
+  shade:    { name:'🗡️ เงาสังหาร', art:'assassin', hit:(sm,S)=>({ dmg:sm.pow*1.2, label:'🗡️', vuln:1 }) },
+  phantom:  { name:'🥷 ภูตสังหาร', art:'assassin', hit:(sm,S)=>({ dmg:sm.pow*1.8, label:'🥷' }) },
+  wraith:   { name:'👻 วิญญาณคู่สังหาร', art:'nightmare', hit:(sm,S)=>({ dmg:sm.pow*.7, label:'👻', hits:2, vuln:1 }) },
+  // ประจำ จอมมารแฮกเกอร์
+  drone:    { name:'🤖 บอตติดตาม', art:'drone', hit:(sm,S)=>({ dmg:sm.pow*.9, label:'🤖' }) },
+  megabot:  { name:'🦾 เมก้าบอต', art:'drone', hit:(sm,S)=>({ dmg:sm.pow*1.6, label:'🦾' }) },
+  virusbot: { name:'🦠 บอตไวรัส', art:'drone', hit:(sm,S)=>({ dmg:sm.pow*.6, label:'🦠', aoe:true, poison:1 }) },
 };
 // สกิลซัมมอน (ได้จากการเลี้ยง — สูงสุด 3 ช่อง, ช่อง 3 ต้องปลดล็อกด้วยแต้มเกิดใหม่)
 const SUMMON_ABIL = {
@@ -1960,14 +2005,26 @@ const SUMMON_ABIL = {
 };
 function newSummon(key){
   const d = SUMMON_DEFS[key];
-  return { key, name:d.name, lv:1, xp:0, mult:1, abil:[] };
+  return { key, name:d.name, lv:1, xp:0, abil:[] };
 }
-function summonNextLv(sm){
-  // ลดค่าอาหารให้โตง่ายขึ้น (เดิม 3/8/15)
-  if (sm.lv === 1) return 2;
-  if (sm.lv === 2) return 4;
-  if (sm.lv === 3 && META.summonSlot3 && sm.abil.length < 3) return 6;
-  return null;
+// EXP ที่ต้องใช้เลื่อนเลเวลถัดไป (เลเวลไม่จำกัด)
+function summonXpNeed(lv){ return 4 + lv*4; }   // lv1→8, lv2→12, lv3→16...
+function summonNextLv(sm){ return summonXpNeed(sm.lv); }  // เผื่อโค้ดเก่าอ้างถึง
+// พลังของซัมมอนเอง — สเกลตามเลเวล (EXP) + ความลึกด่าน ไม่อิงพลังจอมมาร
+function summonPow(sm){ return Math.ceil((5 + (sm.lv-1)*4) * (1 + (S.node||1)*0.10)); }
+// ให้ EXP ซัมมอนจากการต่อสู้ (ตามจำนวนศัตรูที่เคลียร์) — เลเวลขึ้นได้หลายระดับ
+function gainSummonXp(sm, amt){
+  if (!sm || amt <= 0) return 0;
+  sm.xp = (sm.xp||0) + amt;
+  let leveled = 0;
+  while (sm.xp >= summonXpNeed(sm.lv)){
+    sm.xp -= summonXpNeed(sm.lv);
+    sm.lv++; leveled++;
+    grantRandomAbil(sm);        // ปลดสกิลใหม่เมื่อเลเวลขึ้น (ถ้ายังมีช่อง)
+    if (sm.lv === 2) unlockAch('summon-evolve');
+    if (sm.abil.length >= 3) unlockAch('summon-max');
+  }
+  return leveled;
 }
 // มอบสกิลสุ่มให้ซัมมอน (ใช้ตอนเริ่มเกมที่ปราสาทดันเลเวล — กันช่องว่าง "เลเวลสูงแต่ไม่มีสกิล")
 function grantRandomAbil(sm){
@@ -2002,6 +2059,14 @@ const CLASSES = [
     bonus:'บล็อกพื้นฐาน +10% · คอมโบ: โล่และดาบ',
     cards:['kingSlash','royalGuard'], summonKey:'golem',
     apply:s=>{ s.baseBlock = Math.min(.3, s.baseBlock + .10); } },
+  { id:'assassinKing', icon:'🗡️', name:'จอมมารนักฆ่า',
+    bonus:'คริ +10%, ความเร็ว +2 · คอมโบ: คริแตก & เปราะบาง',
+    cards:['assassinate','shadowStep'], summonKey:'shade',
+    apply:s=>{ s.crit = Math.min(.8, s.crit + .10); s.speed += 2; } },
+  { id:'hackerKing', icon:'💻', name:'จอมมารแฮกเกอร์',
+    bonus:'พลังงานสูงสุด +1 · คอมโบ: แฮ็กตัวนับ & ไวรัส & ปั๊มบอท',
+    cards:['systemHack','virus'], genCard:'botnet', summonKey:'drone',
+    apply:s=>{ s.maxEnergy += 1; } },
 ];
 function getClass(){ return S && S.classId ? CLASSES.find(c=>c.id===S.classId) : null; }
 
@@ -2013,6 +2078,8 @@ const EVOLUTIONS = {
   necro:      { name:'ราชันสุสาน', icon:'⚰️', desc:'พลัง +15%, ทอง +10%', cards:['plague'], summons:['lich','abom'] },
   dragonlord: { name:'จักรพรรดิมังกรทมิฬ', icon:'🌋', desc:'พลัง +15%, คริ +5%', cards:['apocalypse'], summons:['drake','wyrm'] },
   demonking:  { name:'อัศวินมืดโล่ผนึก', icon:'🛡️', desc:'พลัง +15%, บล็อก +5% (สายโล่พิฆาต)', cards:['shieldBash'], summons:['golem2','knightShade'] },
+  assassinKing:{ name:'เงามรณะนิรันดร์', icon:'🥷', desc:'พลัง +15%, คริ +5%, ความเร็ว +2', cards:['deathmark'], summons:['phantom','wraith'] },
+  hackerKing: { name:'ปรมาจารย์ไซเบอร์', icon:'👾', desc:'พลัง +15%, พลังงาน +1', cards:['systemCrash'], summons:['megabot','virusbot'] },
 };
 
 function renderSummons(){
@@ -2042,7 +2109,7 @@ function applyClass(c){
   c.cards.forEach(id => S.deck.push(id));
   if (c.genCard) S.deck.push(c.genCard); // การ์ดสกิลหลอมประจำสาย
   const sm0 = newSummon(c.summonKey);
-  for (let i = 0; i < (META.summonLv||0) && sm0.lv < 3; i++){ sm0.lv++; sm0.mult += (sm0.lv === 2 ? .4 : .6); grantRandomAbil(sm0); }
+  for (let i = 0; i < (META.summonLv||0); i++){ sm0.lv++; grantRandomAbil(sm0); }   // ปราสาทดันเลเวลเริ่มต้น
   S.summons = [ sm0 ];
   applyClassVisual();
   if (!META.classesPlayed) META.classesPlayed = {};
@@ -2076,6 +2143,8 @@ function showEvolution(done){
       if (c.id === 'necro') S.goldMul *= 1.1;
       if (c.id === 'dragonlord') S.crit = Math.min(.85, S.crit + .05);
       if (c.id === 'demonking') S.baseBlock = Math.min(.35, S.baseBlock + .05);
+      if (c.id === 'assassinKing'){ S.crit = Math.min(.85, S.crit + .05); S.speed += 2; }
+      if (c.id === 'hackerKing') S.maxEnergy += 1;
       evo.cards.forEach(id => S.deck.push(id));
       // เพิ่มซัมมอนตัวที่สองเข้าทีม (ตัวเดิมยังอยู่)
       if (!S.summons) S.summons = [];
@@ -2137,7 +2206,8 @@ function summonOneStrike(sm, after){
   fxSummonDash(sd, enemies.indexOf(t));
   setTimeout(() => {
     if (!S.inBattle){ return; }
-    const h = sd.hit(S);
+    sm.pow = summonPow(sm);          // พลังซัมมอน (อิสระจากพลังจอมมาร)
+    const h = sd.hit(sm, S);
     const hits = h.hits || 1;
     let total = 0;
     for (let k = 0; k < hits; k++){
@@ -2145,19 +2215,20 @@ function summonOneStrike(sm, after){
       targets.forEach(e => {
         const ei = enemies.indexOf(e);
         if (e.invuln){ spawnText($('battle-area'), '🥤 บล็อก!', null, 'auto', .45 + ei*.18, .35); return; }
-        let d = h.dmg * sm.mult * (1 - (e.guardPct || 0)) * (e.debuffs.vuln > 0 ? 1.3 : 1);
+        let d = h.dmg * (1 - (e.guardPct || 0)) * (e.debuffs.vuln > 0 ? 1.3 : 1);
         e.hp -= d;
         total += d;
         spawnText($('battle-area'), h.label + ' ' + fmt(d), null, h.crit ? 'crit' : 'auto', .45 + ei*.18, rand(.25,.45));
         hitFlash('eart-' + ei);
         if (h.burn) applyDebuff(e, 'burn', h.burn);
         if (h.poison) applyDebuff(e, 'poison', h.poison);
+        if (h.vuln) applyDebuff(e, 'vuln', h.vuln);
         if (sm.abil.includes('venom')) applyDebuff(e, 'poison', 1);
         if (sm.abil.includes('blaze')) applyDebuff(e, 'burn', 1);
       });
       if (sm.abil.includes('sweep') && !h.aoe){
         aliveEnemies().filter(e => e !== curTarget() && !e.invuln).forEach(e => {
-          const d = h.dmg * sm.mult * .5 * (1 - (e.guardPct||0));
+          const d = h.dmg * .5 * (1 - (e.guardPct||0));
           e.hp -= d;
           spawnText($('battle-area'), '🌪️ ' + fmt(d), null, 'auto', .45 + enemies.indexOf(e)*.18, .4);
         });
@@ -2181,12 +2252,14 @@ function openSummonPanel(idx){
   if (summonPanelIdx >= S.summons.length) summonPanelIdx = 0;
   const sm = S.summons[summonPanelIdx];
   const sd = SUMMON_DEFS[sm.key];
-  const next = summonNextLv(sm);
+  const need = summonXpNeed(sm.lv);
+  sm.pow = summonPow(sm);
   let html = '<div style="width:90px; margin:0 auto;" class="wobble-slow">' + ART[sd.art] + '</div>' +
     '<div style="font-family:Mali; font-weight:700; font-size:1.2rem;">' + sm.name + ' — Lv.' + sm.lv + '</div>' +
-    '<div style="opacity:.7;">พลังโจมตี ×' + sm.mult.toFixed(1) + ' · อิ่ม ' + sm.xp + (next ? '/' + next : ' (สูงสุด)') + '</div>' +
+    '<div style="opacity:.7;">⚔️ พลังโจมตี ' + sm.pow + ' · EXP ' + sm.xp + '/' + need + '</div>' +
+    '<div style="opacity:.6; font-size:.85rem;">(ได้ EXP จากการต่อสู้ — ฆ่าศัตรูมากยิ่งโตไว)</div>' +
     '<div style="margin:8px 0;">สกิล: ' + (sm.abil.length ? sm.abil.map(a => SUMMON_ABIL[a].icon + ' ' + SUMMON_ABIL[a].name).join(' · ') : '— ยังไม่มี —') + ' (' + sm.abil.length + '/3' + (META.summonSlot3 ? '' : ' · ช่อง 3 ล็อก 🔒') + ')</div>' +
-    '<div style="opacity:.65; font-size:.9rem; margin-bottom:8px;">🍖 คลิกไอเทมในกระเป๋าเพื่อป้อนตัวนี้ (+1 อิ่ม) — อิ่มครบแล้ววิวัฒน์ เลือกสกิลใหม่ได้</div>';
+    '<div style="opacity:.65; font-size:.9rem; margin-bottom:8px;">🍖 ป้อนไอเทมเพื่อเร่ง EXP (+4 ต่อชิ้น)</div>';
   $('event-art').innerHTML = '';
   $('event-title').textContent = '🐾 ทีมผู้ติดตาม';
   $('event-desc').innerHTML = html;
@@ -2228,20 +2301,13 @@ function openSummonPanel(idx){
 }
 function feedSummon(i){
   const sm = S.summons[summonPanelIdx];
-  const next = summonNextLv(sm);
-  if (!next){ showToast('🐾 ' + sm.name + ' อิ่มจนไม่รับอะไรแล้ว!'); return; }
   S.items.splice(i, 1);
-  sm.xp++;
   beep(520,.08,'square',.04);
-  if (sm.xp >= next){
-    sm.lv++;
-    sm.mult += (sm.lv === 2 ? .4 : .6);
-    unlockAch('summon-evolve');
+  const up = gainSummonXp(sm, 4);   // ป้อน 1 ชิ้น = +4 EXP
+  if (up){
     beep(523,.1,'square',.06); setTimeout(()=>beep(659,.12,'square',.06),110); setTimeout(()=>beep(784,.2,'square',.06),230);
-    showToast('🐾 ' + sm.name + ' วิวัฒน์เป็น Lv.' + sm.lv + '!');
+    showToast('🐾 ' + sm.name + ' เลเวลอัป → Lv.' + sm.lv + '!');
     applyClassVisual();
-    pickSummonAbility(sm);
-    return;
   }
   updateHud();
   openSummonPanel();
@@ -2726,6 +2792,7 @@ function startBattle(tier, overrides){
       if (k >= 0) S.hand.push(S.drawPile.splice(k, 1)[0]);
     });
     while (S.hand.length < 5 && S.drawPile.length) S.hand.push(S.drawPile.pop());
+    if (enemies[0]) enemies[0].cd = 3;   // บทเรียน: สไลม์ออกท่าหลังเล่น 3 ใบ (สาธิตการโดนตี)
     renderHand();
     startTutorial();
   }
@@ -2849,13 +2916,37 @@ function drawCards(n){
   }
 }
 
-// ตัดสินใจ intent ของศัตรูทุกตัวต้นรอบ (เพื่อจัดลำดับตามความเร็ว)
-function decideAll(){ enemies.forEach(e => { if (e.hp > 0) decideIntent(e); }); }
+// ค่าตัวนับถอยหลังของศัตรู (เหนือหัว) — ยิ่งเร็วยิ่งนับน้อย = ออกท่าหลังเล่นการ์ดไม่กี่ใบ
+// (ความเร็วผู้เล่นสูง = ดันตัวนับศัตรูให้สูงขึ้น → ศัตรูออกท่าช้าลงเทียบกับเรา)
+function cdFor(e){
+  let cd = Math.round(66 / Math.max(1, e.speed));      // speed 11≈6, 16≈4, 7≈9
+  cd += Math.max(0, (S.speed || 11) - 11);             // ความว่องไวของจอมมารถ่วงศัตรู
+  cd = Math.max(2, Math.min(9, cd));
+  if (e.intent === 'cleanse') cd = Math.min(cd, 2);    // จะชำระดีบัฟ → ออกไวภายใน 2 การ์ด
+  return cd;
+}
 
-// เริ่ม "รอบ" ใหม่ — จัดลำดับลงมือตามความเร็ว: ศัตรูที่เร็วกว่าเรา = ชิงลงมือก่อน
-function startRound(){
+// เรียกทุกครั้งที่ผู้เล่น "เล่นการ์ด 1 ใบ" — ลดตัวนับศัตรูทุกตัว ถึง 0 = ออกท่าทันที
+function tickEnemyCounters(){
   if (!S.inBattle) return;
-  // 🥤 นักรบน้ำอัดลม: นับรอบ ครบ 7 แล้วบินหนี
+  const ready = [];
+  aliveEnemies().forEach(e => {
+    if (e.acted) return;
+    e.cd = (e.cd != null ? e.cd : cdFor(e)) - 1;
+    if (e.cd <= 0) ready.push(e);
+  });
+  ready.sort((a,b)=> b.speed - a.speed);   // เร็วกว่าออกก่อน
+  for (const e of ready){
+    if (!S.inBattle) return;               // เผื่อ gameOver/flee ระหว่างทาง
+    if (e.hp <= 0 || e.acted) continue;
+    enemyTakeTurn(e);
+  }
+  renderBattle(); renderHand();
+}
+
+function startPlayerTurn(){
+  if (!S.inBattle) return;
+  // 🥤 นักรบน้ำอัดลม: นับเทิร์น ครบ 7 แล้วบินหนี
   const soda = aliveEnemies().find(e => e.art === 'soda');
   if (soda){
     soda.sodaTurns = (soda.sodaTurns||0) + 1;
@@ -2864,21 +2955,21 @@ function startRound(){
   }
   S.turnNum++;
   maybeTaunt();
-  decideAll();
-  const fast = aliveEnemies().filter(e => e.speed > S.speed).sort((a,b)=> b.speed - a.speed);
-  if (fast.length){
-    S.playerTurn = false;
-    banner('⚡ ศัตรูว่องไวกว่า — ชิงลงมือก่อน!');
-    renderBattle(); renderHand();
-    setTimeout(()=> runEnemyGroup(fast, 0, beginPlayerControl), 650);
-  } else {
-    beginPlayerControl();
-  }
-}
-
-// ช่วงที่ผู้เล่นควบคุม (จั่ว/รีเซ็ตพลังงาน/บล็อก แล้วเล่นการ์ด)
-function beginPlayerControl(){
-  if (!S.inBattle) return;
+  // DoT พิษ/ไฟลวก ออกฤทธิ์ต้นเทิร์น (สแตคค้างข้ามเทิร์น ลด 1/เทิร์น)
+  aliveEnemies().forEach(e => {
+    ['poison','burn'].forEach(k => {
+      if (e.debuffs[k] > 0 && e.hp > 0){
+        const perStack = Math.max(3 + S.node * .4, Math.ceil(e.maxHp * .025));
+        const d = Math.ceil(e.debuffs[k] * perStack);
+        e.hp -= d;
+        spawnText($('battle-area'), (k==='poison'?'☠️':'🔥') + ' ' + fmt(d), null, 'auto', .5 + enemies.indexOf(e)*.15, .35);
+        e.debuffs[k]--;
+      }
+    });
+  });
+  if (!aliveEnemies().length){ winBattle(); return; }
+  // ตัดสินใจท่า + ตั้งตัวนับถอยหลังใหม่ทุกตัว
+  aliveEnemies().forEach(e => { decideIntent(e); e.acted = false; e.cd = cdFor(e); });
   S.playerTurn = true;
   S.energy = S.maxEnergy;
   S.blockPct = S.baseBlock;
@@ -2895,14 +2986,12 @@ function beginPlayerControl(){
     return;
   }
   if (S.keepBanner) S.keepBanner = false;
-  else banner('🃏 ตาของเจ้า — เล่นการ์ด (⚡ความเร็ว ' + S.speed + ')');
+  else banner('🃏 ตาของเจ้า — เล่นการ์ด (เลขเหนือศัตรู = นับถอยหลังออกท่า)');
   renderBattle();
   renderHand();
   tutOnPlayerTurn();
   if (!TUT.active) setTimeout(summonChatter, 500);
 }
-// คงชื่อเดิมไว้เผื่อมีที่เรียก
-function startPlayerTurn(){ startRound(); }
 
 // ดาเมจการ์ด/ซัมมอนใส่ศัตรู 1 ตัว (รวม buff/debuff/เครียด)
 function hitEnemy(e, rawMult, opts){
@@ -2917,7 +3006,7 @@ function hitEnemy(e, rawMult, opts){
   }
   let dmg = S.power * rawMult;
   if (opts.flat) dmg += opts.flat;
-  const isCrit = !opts.noCrit && chance(S.crit);
+  const isCrit = !opts.noCrit && ((opts.card && S.buffs.surecrit) || chance(S.crit));  // 🗡️ ก้าวเงา = คริแน่นอน
   if (isCrit) dmg *= S.critMul;
   // buff ฝั่งเรา
   dmg *= (1 + .1*(S.buffs.str||0) + .15*(S.buffs.momentum||0));
@@ -2946,6 +3035,17 @@ function applyDebuff(e, key, n){
   if (key === 'poison' && e.debuffs.poison >= 10) unlockAch('poison-master');
   const ICONS = { poison:'☠️', burn:'🔥', weak:'💫', vuln:'🎯' };
   spawnText($('battle-area'), ICONS[key] + '+' + n, null, 'stress', .5 + enemies.indexOf(e)*.15, .5);
+}
+// 🦠 สุ่มดีบัฟ (ไวรัสแฮกเกอร์)
+function applyRandDebuff(e, n){
+  if (!e || e.hp <= 0) return;
+  applyDebuff(e, pick(['poison','burn','weak','vuln']), n);
+}
+// 💻 แฮ็กตัวนับศัตรู (ดันให้ออกท่าช้าลง)
+function hackEnemyCd(e, n){
+  if (!e || e.hp <= 0 || e.acted) return;
+  e.cd = (e.cd != null ? e.cd : cdFor(e)) + n;
+  spawnText($('battle-area'), '💻 ตัวนับ +' + n, null, 'auto', .5 + enemies.indexOf(e)*.15, .45);
 }
 function healPlayer(amount, allowOverflow){
   if (amount <= 0) return;
@@ -2997,6 +3097,8 @@ function playCard(idx){
     spawnText($('battle-area'), c.icon + ' ทิ้งการ์ดขยะ', null, 'auto', .35, .55);
     beep(160, .08, 'sawtooth', .03);
     renderBattle(); renderHand();
+    if (S.hp <= 0){ gameOver(); return; }
+    tickEnemyCounters();
     return;
   }
 
@@ -3019,6 +3121,8 @@ function playCard(idx){
         if (c.burn) applyDebuff(e, 'burn', c.burn);
         if (c.weak) applyDebuff(e, 'weak', c.weak);
         if (c.vuln) applyDebuff(e, 'vuln', c.vuln);
+        if (c.randDebuff) applyRandDebuff(e, c.randDebuff);
+        if (c.hackCdAll) hackEnemyCd(e, c.hackCdAll);
         if (c.burnDetonate && e.debuffs.burn > 0){
           const bd = hitEnemy(e, .8 * e.debuffs.burn, { icon:'💥', noCrit:true });
           total += bd;
@@ -3037,7 +3141,11 @@ function playCard(idx){
     if (c.healPct) healPlayer(S.maxHp * c.healPct, true);
     killedNow = beforeAlive - aliveEnemies().length;
     if (killedNow >= 2) unlockAch('aoe-master');
+    if (S.buffs.surecrit){ S.buffs.surecrit = false; }   // ใช้คริแน่นอนแล้ว
   }
+  if (c.surecrit){ S.buffs.surecrit = true; fxBurst('player', '🗡️'); spawnText($('battle-area'), '🗡️ คริแน่นอน!', null, 'crit', .15, .4); }
+  if (c.hackCd && c.type !== 'atk'){ const t = curTarget(); if (t) hackEnemyCd(t, c.hackCd); beep(440,.08,'square',.04); }
+  if (c.hackCdAll && c.type !== 'atk'){ aliveEnemies().forEach(e => hackEnemyCd(e, c.hackCdAll)); }
   if (c.block || c.blockFlat){
     if (c.block) S.blockPct = Math.min(.95, S.blockPct + c.block);
     if (c.blockFlat) S.blockFlat = (S.blockFlat||0) + c.blockFlat;
@@ -3056,7 +3164,8 @@ function playCard(idx){
 
   tutOnPlay(c);
   renderBattle(); renderHand();
-  if (!aliveEnemies().length) winBattle();
+  if (!aliveEnemies().length){ winBattle(); return; }
+  tickEnemyCounters();   // เล่นการ์ด 1 ใบ → ลดตัวนับศัตรู (ถึง 0 ออกท่าทันที)
 }
 
 // ===== ฉากทอยเต๋าเต็มจอ (ลุ้นสำเร็จ/บางส่วน/พลาด พร้อมแสงสีเสียง) =====
@@ -3168,14 +3277,11 @@ function endTurn(fromSkip){
   S.hand = [];
   renderHand();
   if (!aliveEnemies().length){ winBattle(); return; }
-  // ซัมมอนทั้งทีมบุก แล้วศัตรูที่ "ช้ากว่าหรือเท่าเรา" จึงลงมือ (ตามลำดับความเร็ว)
+  // จบเทิร์น → ซัมมอนบุก → เริ่มเทิร์นใหม่ (ศัตรูออกท่าระหว่างเทิร์นผ่านตัวนับ)
   banner('🐾 ทีมผู้ติดตามบุก!');
   summonPhase(() => {
     if (!S.inBattle) return;
-    const slow = aliveEnemies().filter(e => e.speed <= S.speed).sort((a,b)=> b.speed - a.speed);
-    if (!slow.length){ if (S.inBattle) startRound(); return; }
-    banner('⏳ ตาของศัตรู...');
-    setTimeout(()=> runEnemyGroup(slow, 0, () => { if (S.inBattle) startRound(); }), 500);
+    setTimeout(() => { if (S.inBattle) startPlayerTurn(); }, 300);
   });
 }
 
@@ -3208,35 +3314,10 @@ function enemyHit(e, raw){
   return S.hp <= 0;
 }
 
-// ประมวลกลุ่มศัตรูทีละตัว แล้วเรียก after() เมื่อจบกลุ่ม
-function runEnemyGroup(list, i, after){
-  if (!S.inBattle) return;
-  if (i >= list.length){ if (after) after(); return; }
-  const e = list[i];
-  if (e.hp <= 0){ runEnemyGroup(list, i+1, after); return; }
-  enemyTakeTurn(e, () => setTimeout(()=> runEnemyGroup(list, i+1, after), 480));
-}
-
-// ศัตรู 1 ตัวลงมือ (DoT → แอ็กชัน → ลดดีบัฟ) แล้วเรียก after()
-function enemyTakeTurn(e, after){
-  if (!S.inBattle) return;
-  if (e.hp <= 0){ if (after) after(); return; }
-  // DoT: พิษ/ไฟลวก (สแตคค้างข้ามรอบ ลด 1/รอบ)
-  ['poison','burn'].forEach(k => {
-    if (e.debuffs[k] > 0 && e.hp > 0){
-      const perStack = Math.max(3 + S.node * .4, Math.ceil(e.maxHp * .025));
-      const d = Math.ceil(e.debuffs[k] * perStack);
-      e.hp -= d;
-      spawnText($('battle-area'), (k==='poison'?'☠️':'🔥') + ' ' + fmt(d), null, 'auto', .5 + enemies.indexOf(e)*.15, .35);
-      e.debuffs[k]--;
-    }
-  });
-  if (e.hp <= 0){
-    renderBattle();
-    if (!aliveEnemies().length){ winBattle(); return; }
-    if (after) after();
-    return;
-  }
+// ศัตรู 1 ตัวลงมือทันที (ตัวนับถึง 0) — synchronous
+function enemyTakeTurn(e){
+  if (!S.inBattle || e.hp <= 0) return;
+  e.acted = true;        // ออกท่าแล้ว จบเทิร์นมันจนกว่าผู้เล่นจะเริ่มเทิร์นใหม่
   e.guardPct = 0;
   const it = e.intent;
   if (it === 'attack'){
@@ -3297,7 +3378,6 @@ function enemyTakeTurn(e, after){
   if (e.debuffs.weak > 0) e.debuffs.weak--;
   if (e.debuffs.vuln > 0) e.debuffs.vuln--;
   renderBattle();
-  if (after) after();
 }
 
 function endBattleEscape(){
@@ -3414,6 +3494,12 @@ function winBattle(){
   const lead = enemies[0] || {};
   const killCount = enemies.length;
   enemies.forEach(e => { if (e.art) bestiaryKill(e.art); }); // 📖 บันทึกการสังหารลงสมุด
+  // 🐾 EXP ซัมมอนจากการต่อสู้ — สเกลตามจำนวนศัตรูที่เคลียร์ (waves)
+  const xpGain = killCount + (lead.isBoss ? 4 : 0) + (lead.tier === 4 ? 2 : 0);
+  (S.summons || []).forEach(sm => {
+    const up = gainSummonXp(sm, xpGain);
+    if (up) showToast('🐾 ' + sm.name + ' เลเวลอัป → Lv.' + sm.lv + '! (EXP จากศึก)');
+  });
   S.kills += killCount;
   S.battles++;
   const g = Math.ceil(enemies.reduce((a,e)=>a+e.gold, 0) * S.goldMul);
@@ -4605,6 +4691,7 @@ function renderBattle(){
     if (S.buffs.str > 0) t.push('💪' + S.buffs.str);
     if (S.buffs.momentum > 0) t.push('🌀' + S.buffs.momentum);
     if (S.buffs.dfire) t.push('🐉×2');
+    if (S.buffs.surecrit) t.push('🗡️คริ!');
     pb.textContent = t.join(' ');
   }
   renderEnemies();
@@ -4628,12 +4715,16 @@ function renderEnemies(){
     const u = document.createElement('div');
     const dead = e.hp <= 0;
     u.className = 'enemy-unit' + (i === S.target && !dead ? ' targeted' : '') + (dead ? ' dead' : '');
-    const faster = !dead && e.speed > (S.speed||11);
-    const spdTag = '<span style="font-size:.66rem; opacity:.75;">⚡' + e.speed + (faster ? ' <b style="color:#b3322b;">เร็วกว่า!</b>' : '') + '</span>';
+    // ตัวนับถอยหลังออกท่า (เหนือหัว) — สีแดงเมื่อใกล้ถึง 0
+    const cd = (e.cd != null ? e.cd : '?');
+    const cdColor = e.acted ? '#888' : (typeof cd === 'number' && cd <= 1 ? '#b3322b' : '#2a2a2a');
+    const cdLabel = dead ? '' : (e.acted
+      ? '<div class="eu-cd done">✓ ออกท่าแล้ว</div>'
+      : '<div class="eu-cd" style="border-color:'+cdColor+'; color:'+cdColor+';">⏳ ' + cd + '</div>');
     u.innerHTML =
+      cdLabel +
       '<div class="eu-name' + (e.isBoss ? ' boss-n' : '') + '">' + e.name + (e.guardPct ? ' 🛡️' : '') + '</div>' +
-      '<div>' + spdTag + '</div>' +
-      '<div class="eu-intent">' + (dead ? '☠️' : (S.playerTurn ? intentText(e) : '…')) + '</div>' +
+      '<div class="eu-intent">' + (dead ? '☠️' : intentText(e)) + '</div>' +
       '<div class="eu-art wobble-slow' + (e.isBoss ? ' boss-aura' : '') + (e.tier === 4 ? ' rare-aura' : '') + '" id="eart-' + i + '">' + ART[e.art] + '</div>' +
       '<div class="hpbar eu-hp"><div class="hpfill" style="width:' + Math.max(0, e.hp/e.maxHp*100) + '%"></div><div class="hptext">' + fmt(Math.max(0,e.hp)) + '/' + fmt(e.maxHp) + '</div></div>' +
       '<div class="eu-debuffs">' + debuffText(e) + '</div>';
@@ -4713,8 +4804,8 @@ function victory(){
   setBgm('normal');
   unlockAch('world-conquest');
   const diff = S.diff || 0;
-  // รางวัลครองโลก: วิญญาณก้อนใหญ่ (พรีเมียม) สเกลตามความยาก
-  const gain = 600 + S.kills*3 + diff*600;
+  // รางวัลครองโลก: ลดลงให้สมดุล (เดิมสะสมเยอะเกินไป)
+  const gain = 200 + S.kills + diff*200;
   META.shards += gain;
   META.wins++;
   let unlockMsg = '';
