@@ -1238,7 +1238,8 @@ function hashPw(s){
   return 'h'+(h>>>0).toString(36);
 }
 function defaultMeta(){ return { shards:0, pLv:0, hLv:0, uLv:0, gLv:0, wins:0, runs:0, tutorialDone:false, ach:{}, classesPlayed:{}, totalKills:0, rbPts:0, rbAtk:0, rbEnergy:0, summonSlot3:false, maxDiff:0,
-  critLv:0, blockLv:0, armorLv:0, calmLv:0, goldStartLv:0, itemStartLv:0, summonLv:0, handLv:0, throneLv:0, bestiary:{} }; }
+  critLv:0, blockLv:0, armorLv:0, calmLv:0, goldStartLv:0, itemStartLv:0, summonLv:0, handLv:0, throneLv:0, bestiary:{},
+  towerUnlocked:false, towerBestFloor:0, towerWins:0 }; }
 function acct(){ return DB.users[USER]; }
 
 function loginMsg(t){ $('login-msg').textContent = t || ''; }
@@ -3277,12 +3278,32 @@ function endTurn(fromSkip){
   S.hand = [];
   renderHand();
   if (!aliveEnemies().length){ winBattle(); return; }
-  // จบเทิร์น → ซัมมอนบุก → เริ่มเทิร์นใหม่ (ศัตรูออกท่าระหว่างเทิร์นผ่านตัวนับ)
+  // จบเทิร์น → ซัมมอนบุก → "บังคับ" ศัตรูที่ยังไม่ออกท่าในเทิร์นนี้ให้ลงมือ → เริ่มเทิร์นใหม่
   banner('🐾 ทีมผู้ติดตามบุก!');
   summonPhase(() => {
     if (!S.inBattle) return;
-    setTimeout(() => { if (S.inBattle) startPlayerTurn(); }, 300);
+    forceRemainingEnemies(() => {
+      if (S.inBattle) setTimeout(() => { if (S.inBattle) startPlayerTurn(); }, 300);
+    });
   });
+}
+
+// บังคับศัตรูที่ตัวนับยังไม่ถึง 0 (ยังไม่ออกท่าในเทิร์นนี้) ให้ลงมือตอนจบเทิร์น
+function forceRemainingEnemies(after){
+  const pending = aliveEnemies().filter(e => !e.acted).sort((a,b)=> b.speed - a.speed);
+  if (!pending.length){ if (after) after(); return; }
+  banner('⚔️ ศัตรูที่ยังไม่ออกท่ารีบลงมือ!');
+  let i = 0;
+  function step(){
+    if (!S.inBattle) return;
+    if (i >= pending.length){ if (after) after(); return; }
+    const e = pending[i++];
+    if (e.hp <= 0 || e.acted){ step(); return; }
+    enemyTakeTurn(e);                 // synchronous — อาจจบเกม/หนีได้
+    if (!S.inBattle) return;
+    setTimeout(step, 480);
+  }
+  step();
 }
 
 function enemyHit(e, raw){
