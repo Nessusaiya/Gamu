@@ -138,6 +138,18 @@
   @keyframes lunge { 0%{transform:none;} 35%{transform:translateX(46px) rotate(-7deg) scale(1.08);} 100%{transform:none;} }
   .recoil { animation:recoil .4s ease-out !important; }
   @keyframes recoil { 0%{transform:none;} 35%{transform:translateX(14px) rotate(4deg);} 100%{transform:none;} }
+  /* ศัตรูพุ่งเข้าโจมตี (ฝั่งขวา → พุ่งซ้ายเข้าหาผู้เล่น) */
+  .enemy-lunge { animation:enemyLunge .45s ease-out !important; }
+  @keyframes enemyLunge { 0%{transform:none;} 35%{transform:translateX(-52px) rotate(6deg) scale(1.07);} 100%{transform:none;} }
+  /* โดนบล็อก: โล่วาบ + สั่นเบา */
+  .shield-flash { animation:shieldFlash .45s !important; }
+  @keyframes shieldFlash { 0%{filter:none;} 25%{filter:drop-shadow(0 0 16px #5bc0ff) brightness(1.5);} 60%{filter:drop-shadow(0 0 8px #5bc0ff) brightness(1.2);} 100%{filter:none;} }
+  /* ติดดีบัฟ: ตัวศัตรูเด้ง+เปลี่ยนเฉดสี */
+  .debuff-pop { animation:debuffPop .5s !important; }
+  @keyframes debuffPop { 0%{transform:none;} 40%{transform:scale(1.13) rotate(-4deg); filter:hue-rotate(75deg) saturate(1.6);} 100%{transform:none;} }
+  /* ได้บัฟ: ตัวจอมมารเรืองทอง */
+  .buff-glow { animation:buffGlow .55s !important; }
+  @keyframes buffGlow { 0%{filter:none;} 40%{filter:drop-shadow(0 0 14px #ffd54a) brightness(1.35);} 100%{filter:none;} }
 
   .dmg {
     position:absolute; font-family:'Mali',cursive; font-weight:700; pointer-events:none;
@@ -1267,6 +1279,95 @@ const ART = {
     '<path d="M46 54 L74 54"/>' +
     '<rect x="30" y="48" width="14" height="28"/><rect x="76" y="48" width="14" height="28"/>' +
     '<rect x="48" y="82" width="11" height="26"/><rect x="61" y="82" width="11" height="26"/>'
+  ),
+  // ==== 🗼 หอคอยชั้น 1 — เมืองท่องเที่ยวนักผจญภัยมือใหม่ (อาร์ตใหม่ทั้งหมด) ====
+  rookieKnight: svgWrap(   // มือใหม่ดาบไม้ (หมวกหม้อ)
+    '<path d="M44 26 Q60 16 76 26 L76 34 L44 34 Z"/><path d="M44 30 L76 30"/>' +
+    '<circle cx="60" cy="44" r="11"/>' +
+    '<circle class="fill" cx="55" cy="44" r="2.2"/><circle class="fill" cx="65" cy="44" r="2.2"/>' +
+    '<path d="M55 50 Q60 53 65 50"/>' +
+    '<path d="M48 56 Q60 62 72 56 L70 90 Q60 96 50 90 Z"/>' +
+    '<path d="M70 60 L86 50 L88 54 L74 66"/><path d="M84 48 L90 54"/>' +
+    '<path d="M50 90 L46 106 M70 90 L74 106"/>'
+  ),
+  noviceArcher: svgWrap(   // นักธนูฝึกหัด
+    '<circle cx="58" cy="40" r="11"/>' +
+    '<path d="M48 36 Q58 28 68 36"/>' +
+    '<circle class="fill" cx="53" cy="40" r="2.2"/><circle class="fill" cx="63" cy="40" r="2.2"/>' +
+    '<path d="M53 46 Q58 49 63 46"/>' +
+    '<path d="M50 52 Q58 57 68 52 L70 88 Q58 94 48 88 Z"/>' +
+    '<path d="M86 30 Q98 56 86 82" /><path d="M86 30 L86 82"/>' +
+    '<path d="M70 56 L88 56 M82 52 L90 56 L82 60"/>' +
+    '<path d="M48 88 L44 104 M68 88 L72 104"/>'
+  ),
+  apprMage: svgWrap(   // เด็กฝึกเวท หมวกแหลม
+    '<path d="M60 10 L46 40 L74 40 Z"/><circle class="fill" cx="60" cy="20" r="2.5"/>' +
+    '<circle cx="60" cy="50" r="11"/>' +
+    '<circle class="fill" cx="55" cy="50" r="2.2"/><circle class="fill" cx="65" cy="50" r="2.2"/>' +
+    '<path d="M55 56 Q60 58 65 56"/>' +
+    '<path d="M48 62 Q60 68 72 62 L74 96 Q60 102 46 96 Z"/>' +
+    '<path d="M78 50 L78 96 M78 50 Q74 46 78 42 Q82 46 78 50"/>' +
+    '<circle class="fill" cx="78" cy="44" r="3"/>'
+  ),
+  touristAdv: svgWrap(   // นักท่องเที่ยวมือใหม่ ถือกล้อง/แผนที่
+    '<circle cx="60" cy="40" r="12"/>' +
+    '<path d="M44 38 Q60 30 76 38 L76 32 L44 32 Z"/>' +   // หมวกปีก
+    '<path d="M40 38 L80 38"/>' +
+    '<circle class="fill" cx="54" cy="42" r="2.4"/><circle class="fill" cx="66" cy="42" r="2.4"/>' +
+    '<path d="M53 49 Q60 54 67 49"/>' +
+    '<path d="M48 54 Q60 60 72 54 L74 92 Q60 98 46 92 Z"/>' +
+    '<rect x="50" y="64" width="22" height="15" rx="3"/><circle cx="61" cy="71" r="5"/>' +   // กล้อง
+    '<path d="M46 92 L42 106 M74 92 L78 106"/>'
+  ),
+  pkPlayer: svgWrap(   // นักล่าผู้เล่นใหม่ (PK) — ฮู้ดดำ ดวงตาแดง มีดคู่
+    '<path d="M40 30 Q60 8 80 30 Q82 50 72 58 L48 58 Q38 50 40 30Z"/>' +
+    '<path d="M40 30 Q60 20 80 30"/>' +
+    '<circle class="fill" cx="51" cy="42" r="3.4"/><circle class="fill" cx="69" cy="42" r="3.4"/>' +
+    '<path d="M46 40 L56 43 M74 40 L64 43"/>' +
+    '<path d="M48 58 Q60 66 72 58 L78 96 Q60 104 42 96 Z"/>' +
+    '<path d="M44 70 L24 86 M22 82 L20 92 L30 90"/>' +   // มีดซ้าย
+    '<path d="M76 70 L96 86 M98 82 L100 92 L90 90"/>' +  // มีดขวา
+    '<path d="M52 50 L60 54 L68 50"/>'                   // รอยยิ้มร้าย
+  ),
+  guardian1: svgWrap(   // 👹 ผู้พิทักษ์ประตูชั้น 1 — ปีศาจเขาโง้ง
+    '<path d="M34 30 Q26 14 22 24 Q26 34 38 38" /><path d="M86 30 Q94 14 98 24 Q94 34 82 38"/>' +
+    '<path d="M34 40 Q60 22 86 40 Q96 64 84 82 Q60 98 36 82 Q24 64 34 40Z"/>' +
+    '<path d="M44 46 L56 52 M76 46 L64 52"/>' +
+    '<circle class="fill" cx="50" cy="54" r="4"/><circle class="fill" cx="70" cy="54" r="4"/>' +
+    '<path d="M44 70 Q52 64 60 70 Q68 64 76 70"/>' +     // ปากยิ้มเขี้ยว
+    '<path d="M48 70 L50 78 M56 72 L58 80 M64 72 L62 80 M72 70 L70 78"/>' +
+    '<path d="M30 60 Q18 64 22 74 M90 60 Q102 64 98 74"/>'
+  ),
+  npcShop: svgWrap(   // พ่อค้าของที่ระลึก เคาน์เตอร์
+    '<circle cx="60" cy="34" r="11"/>' +
+    '<path d="M49 30 Q60 22 71 30"/>' +
+    '<circle class="fill" cx="55" cy="34" r="2.2"/><circle class="fill" cx="65" cy="34" r="2.2"/>' +
+    '<path d="M53 40 Q60 45 67 40"/><path d="M50 44 L70 44"/>' +   // หนวด
+    '<path d="M50 46 Q60 52 70 46 L72 70 L48 70 Z"/>' +
+    '<path d="M28 76 L92 76 L92 104 L28 104 Z"/><path d="M28 88 L92 88"/>' +   // เคาน์เตอร์
+    '<rect class="fill" x="40" y="92" width="8" height="8"/><rect class="fill" x="72" y="92" width="8" height="8"/>'
+  ),
+  npcInn: svgWrap(   // โรงเตี๊ยม (อาคาร + ป้าย)
+    '<path d="M24 52 L60 24 L96 52 Z"/><path d="M30 52 L30 104 L90 104 L90 52"/>' +
+    '<rect x="52" y="76" width="16" height="28"/>' +   // ประตู
+    '<rect x="38" y="62" width="14" height="12"/><rect x="68" y="62" width="14" height="12"/>' +   // หน้าต่าง
+    '<circle cx="60" cy="40" r="6"/><path d="M57 40 L63 40 M60 37 L60 43"/>' +   // ป้ายกากบาท (ฮีล)
+    '<path d="M44 76 L44 104 M76 76 L76 104"/>'
+  ),
+  npcGuide: svgWrap(   // ไกด์นำเที่ยว ถือธง
+    '<circle cx="56" cy="40" r="11"/>' +
+    '<circle class="fill" cx="51" cy="40" r="2.2"/><circle class="fill" cx="61" cy="40" r="2.2"/>' +
+    '<path d="M50 46 Q56 51 62 46"/>' +
+    '<path d="M46 52 Q56 58 66 52 L68 92 Q56 98 44 92 Z"/>' +
+    '<path d="M84 18 L84 70"/><path d="M84 20 L106 26 L84 36 Z"/>' +   // ธง
+    '<path d="M44 92 L40 106 M66 92 L70 106"/>'
+  ),
+  devGhost: svgWrap(   // 👁️ เงาผู้สร้าง (Dev) — ฮู้ดลึกลับ ดวงตาเดียวเรืองแสง
+    '<path d="M36 36 Q60 6 84 36 Q90 70 84 96 Q72 86 60 96 Q48 86 36 96 Q30 70 36 36Z"/>' +
+    '<path d="M40 38 Q60 26 80 38"/>' +
+    '<circle cx="60" cy="54" r="9"/><circle class="fill" cx="60" cy="54" r="4"/>' +   // ดวงตาเดียว
+    '<path d="M46 50 Q60 42 74 50"/>' +
+    '<path d="M48 74 L72 74 M52 82 L68 82"/>'   // โค้ด/บรรทัด
   )
 };
 
@@ -1673,6 +1774,18 @@ const TOWER_ENDING = [
   '(จบแพตช์นี้ — ชั้น 21-100 จะมาในตอนต่อไป!)'
 ];
 
+// 🗼 เนื้อเรื่องเปิดหอคอย "ชั้น 1" — เมืองท่องเที่ยวนักผจญภัยมือใหม่
+const FLOOR1_INTRO = [
+  'ประตูหอคอยชั้น 1 เปิดออก... จอมมารชะงัก 😳\nนี่มัน... "เมืองท่องเที่ยว" นี่หว่า!?',
+  'แสงสีคึกคัก ร้านรวงเรียงราย กลิ่นอาหารโชยฟุ้ง\nนักผจญภัยมือใหม่เดินกันให้ควั่ก ถ่ายรูป ซื้อของที่ระลึก 📸🛍️',
+  'เซบาส: 「ชั้น 1 คือ "ชั้นต้อนรับ" ขอรับ —\nที่ที่มือใหม่มาเที่ยว ฝึกวิชา และซื้อขายของ\nไกด์ พ่อค้า โรงเตี๊ยม มีครบทุกอย่าง」 🏘️',
+  'เซบาส: 「แต่ในความคึกคักก็มีอันตรายซ่อนอยู่...\nระวัง "นักล่าผู้เล่นใหม่ (PK)" ขอรับ\nพวกมันปลอมตัวปนในฝูง คอยปล้นและสังหารมือใหม่」 ☠️',
+  'เซบาส: 「ทางการขึ้นบัญชีพวกมันเป็น "บุคคลอันตราย"\n...แต่กับท่านลอร์ดน่ะ มันคือเหยื่อมากกว่า เฮอะ」 😏',
+  'และสุดปลายชั้น... ประตูถูกเฝ้าโดย "อสูรผู้พิทักษ์"\nหนึ่งใน 100 ผู้พิทักษ์ที่ "ผู้สร้างหอ" ปั้นขึ้นมา 👹',
+  'เซบาส: 「หอลอยฟ้าทั้ง 100 ชั้นนี้... สร้างโดยผู้ลึกลับ\nที่เรียกตัวเองว่า "ผู้สร้าง (Dev)" ขอรับ\nไม่มีใครเคยเห็นหน้าเขา รู้แค่ว่าทั้งหอคือ "บททดสอบ" ของเขา」 👁️',
+  'จอมมารยิ้มมุมปาก เล็บดำลูบคาง\n「บททดสอบงั้นเหรอ... งั้นข้าจะเที่ยวให้สนุก\nแล้วยึดทั้งหอนี้มาเป็นของข้าเอง 😈🗼」'
+];
+
 let storyLines = [], storyIdx = 0, storyDone = null;
 function showDialogue(lines, cb){
   storyLines = lines; storyIdx = 0; storyDone = cb;
@@ -1994,6 +2107,28 @@ function hitFlash(id){
   if (!el) return;
   el.classList.remove('hitflash'); void el.offsetWidth; el.classList.add('hitflash');
 }
+// ▶️ ใส่คลาสแอนิเมชันชั่วคราวแล้วถอดออกเอง (กันชน wobble-slow)
+function pulseClass(el, cls, ms){
+  if (!el) return;
+  el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
+  setTimeout(() => { if (el) el.classList.remove(cls); }, ms || 500);
+}
+// 🎯 อนิเมชันตัวศัตรู — ต้อง "หน่วงหลัง render" เพราะ renderEnemies สร้าง element ใหม่ทุกครั้ง
+function pulseEnemy(idx, cls, ms){
+  setTimeout(() => pulseClass($('eart-' + idx), cls, ms), 40);
+}
+// ⚔️ ศัตรูพุ่งเข้าโจมตี
+function enemyLunge(e){ pulseEnemy(enemies.indexOf(e), 'enemy-lunge', 470); }
+// 🛡️ โดนบล็อก: โล่วาบ + เสียงโลหะกระทบ + ประกาย
+function shieldClang(label, full){
+  pulseClass($('player-art'), 'shield-flash', 460);
+  fxBurst('player', '🛡️', full);
+  spawnText($('battle-area'), label, null, 'heal', .15, rand(.3,.45));
+  beep(640, .05, 'square', .05); setTimeout(()=>beep(900, .09, 'triangle', .05), 55);
+  if (full) setTimeout(()=>beep(1180, .12, 'square', .04), 115);
+}
+// 🌟 ได้บัฟ: จอมมารเรืองทอง
+function buffFlash(){ pulseClass($('player-art'), 'buff-glow', 560); }
 
 // ============================================================
 // ACHIEVEMENTS (30 ความสำเร็จ)
@@ -2041,6 +2176,39 @@ const ACH = [
   { id:'poison-master', icon:'☠️', name:'นักปรุงพิษ', desc:'สะสมพิษใส่ศัตรูตัวเดียว 10 สแตคขึ้นไป' },
   { id:'soda-survive', icon:'🥤', name:'มิตรภาพน้ำอัดลม', desc:'อยู่รอดจนนักรบน้ำอัดลมบินจากไป (Easter Egg!)' },
   { id:'alchemist', icon:'⚗️', name:'นักเล่นแร่แปรธาตุ', desc:'หลอมการ์ดสถานะสำเร็จครั้งแรก' },
+  // ===== 🗼 หอลอยฟ้า =====
+  { id:'tower-enter',  icon:'🗼', name:'ผู้บุกหอ', desc:'ก้าวเข้าหอลอยฟ้าครั้งแรก' },
+  { id:'tower-f1',     icon:'🚪', name:'ผ่านชั้นต้อนรับ', desc:'พิชิตหอคอยชั้น 1' },
+  { id:'tower-f5',     icon:'🧗', name:'นักปีนหอ', desc:'พิชิตหอคอยถึงชั้น 5' },
+  { id:'tower-f10',    icon:'⛰️', name:'ครึ่งทางสู่ฟ้า', desc:'พิชิตหอคอยถึงชั้น 10' },
+  { id:'tower-summit', icon:'🏆', name:'เจ้าแห่งหอลอยฟ้า', desc:'พิชิตยอดหอ (ชั้น 20)' },
+  { id:'guardian-1',   icon:'👹', name:'ปราบผู้พิทักษ์ด่านแรก', desc:'โค่นอสูรผู้พิทักษ์ประตูชั้น 1' },
+  { id:'pk-slayer',    icon:'☠️', name:'ล่าผู้ล่า', desc:'โค่น "นักล่าผู้เล่นใหม่ (PK)"' },
+  // ===== 🎽 ของสวมใส่ & ตีบวก =====
+  { id:'first-equip',  icon:'🎽', name:'แต่งองค์ทรงเครื่อง', desc:'สวมใส่ไอเทมชิ้นแรก' },
+  { id:'legendary-gear', icon:'🌟', name:'ในตำนาน', desc:'ได้ของสวมใส่ระดับ Legendary' },
+  { id:'full-equip',   icon:'🛡️', name:'พร้อมรบเต็มอัตรา', desc:'สวมใส่ครบทั้ง 3 ช่อง' },
+  { id:'refine-5',     icon:'⚒️', name:'ช่างตีเหล็ก', desc:'ตีบวกอุปกรณ์ถึง +5' },
+  { id:'refine-10',    icon:'🔨', name:'จอมช่างผู้กล้า', desc:'ตีบวกอุปกรณ์ถึง +10' },
+  { id:'refine-broke', icon:'💔', name:'อยากชิบหายให้ตีบวก', desc:'ของแตกสลายจากการตีบวก (ครั้งแรก)' },
+  // ===== 💎 ของวิเศษ & relic =====
+  { id:'first-relic',  icon:'💎', name:'นักสะสมของวิเศษ', desc:'ได้ของวิเศษ (relic) ชิ้นแรก' },
+  { id:'relic-hoard',  icon:'👑', name:'คลังของวิเศษ', desc:'มีของวิเศษ 5 ชิ้นในรันเดียว' },
+  { id:'phoenix-revive', icon:'🪶', name:'เกิดใหม่จากเถ้า', desc:'รอดตายด้วยขนนกฟีนิกซ์' },
+  // ===== 🥚 Easter Egg =====
+  { id:'egg-bahamat',  icon:'🐉', name:'มรดกมังกร', desc:'พบ B.bahamat และรับเลี้ยงเบบี้บาฮามุท' },
+  { id:'egg-rolbox',   icon:'🟥', name:'left the game', desc:'พบ rolbox11231 (Easter Egg)' },
+  { id:'egg-master',   icon:'🥚', name:'นักล่าไข่อีสเตอร์', desc:'พบเหตุการณ์ลับครบทุกแบบ' },
+  // ===== 📅 รายวัน & อาชีพ =====
+  { id:'daily-first',  icon:'📅', name:'ขยันเข้าเล่น', desc:'รับรางวัลภารกิจรายวันครั้งแรก' },
+  { id:'daily-streak7', icon:'🔥', name:'ติดงอมแงม', desc:'ล็อกอินต่อเนื่อง 7 วัน' },
+  { id:'twinblade-pick', icon:'🗡️', name:'วิถีดาบคู่', desc:'เลือกเล่นจอมมารดาบคู่' },
+  { id:'combo-10',     icon:'⚡', name:'รัวไม่ยั้ง', desc:'สะสมคอมโบดาบคู่ถึง 10 ในเทิร์นเดียว' },
+  { id:'shield-counter', icon:'🛡️', name:'หนามแห่งการตั้งรับ', desc:'สวนกลับศัตรูด้วยจอมมารโล่' },
+  { id:'hacker-heist', icon:'💻', name:'แฮ็กคลังการ์ด', desc:'แฮ็กการ์ดต่างสายหลังโค่นบอส' },
+  // ===== ⚔️ คอมแบต =====
+  { id:'big-hit',      icon:'💥', name:'หมัดเดียวจอด', desc:'ออกดาเมจครั้งเดียว 1,000,000 ขึ้นไป' },
+  { id:'roulette-jackpot', icon:'🎰', name:'ดวงเฮงสุดขีด', desc:'หมุนวงล้อเทพธิดาได้แจ็คพอต!' },
 ];
 let achQueue = [];
 let achShowing = false;
@@ -2095,6 +2263,8 @@ function bestiaryDisplayName(art){
   if (art === 'bear') return '🐻 หมียักษ์แห่งขุนเขา';
   if (art === 'imp') return 'สมุนแสงจิ๋ว';
   if (typeof TOWER_POOL !== 'undefined'){ const tf = TOWER_POOL.find(x=>x[0]===art); if (tf) return tf[1]; }
+  if (typeof FLOOR1_POOL !== 'undefined'){ const ff = FLOOR1_POOL.find(x=>x[0]===art); if (ff) return ff[1]; }
+  if (art === 'pkPlayer') return '☠️ นักล่าผู้เล่นใหม่ (PK)';
   if (typeof TOWER_BOSSES !== 'undefined'){ for (const k in TOWER_BOSSES){ if (TOWER_BOSSES[k].art===art) return TOWER_BOSSES[k].name; } }
   return art;
 }
@@ -2109,6 +2279,7 @@ function markEquipSeen(it){
   if (!META.equipSeen) META.equipSeen = { slots:{}, rarities:{}, passives:{} };
   META.equipSeen.slots[it.slot] = true; META.equipSeen.rarities[it.rarity] = true;
   if (it.passive) META.equipSeen.passives[it.passive] = true; saveMeta();
+  if (it.rarity === 'legendary') unlockAch('legendary-gear');
 }
 function markEvoSeen(id){ if (!META.evoSeen) META.evoSeen = {}; if (!META.evoSeen[id]){ META.evoSeen[id] = true; saveMeta(); } }
 
@@ -2575,6 +2746,7 @@ function applyClassVisual(){
 }
 function applyClass(c){
   S.classId = c.id;
+  if (c.id === 'twinblade') unlockAch('twinblade-pick');
   c.apply(S);
   c.cards.forEach(id => S.deck.push(id));
   if (c.genCard) S.deck.push(c.genCard); // การ์ดสกิลหลอมประจำสาย
@@ -3079,6 +3251,13 @@ const ENEMY_SKILLS = {
   spearKnight:[['attack',.4],['charge',.25],['weaponskill',.35]],
   templar:    [['guard',.35],['attack',.3],['weaponskill',.2],['heal',.15]],
   duelist:    [['double',.4],['execute',.35],['attack',.25]],
+  // 🗼 ชั้น 1 — นักผจญภัยมือใหม่ & นักล่า PK
+  rookieKnight:[['attack',.55],['guard',.45]],
+  noviceArcher:[['attack',.6],['charge',.4]],
+  apprMage:    [['attack',.45],['curse:confusion',.35],['charge',.2]],
+  touristAdv:  [['attack',.6],['scare',.25],['guard',.15]],
+  pkPlayer:    [['execute',.4],['double',.35],['weaponskill',.25]],
+  guardian1:   [['attack',.4],['charge',.25],['weaponskill',.2],['summon',.15]],
 };
 
 // Rare Monsters — โผล่แทนศึกปกติ 10%
@@ -3104,7 +3283,8 @@ const ARCH_DEF = {
 };
 // ความเร็วเฉพาะตัว (override archetype) — ยิ่งสูงยิ่งลงมือก่อน
 const ENEMY_SPD = { slime:9, adventurer:11, soldier:7, archer:14, priest:10, knight:8, mage:11, swordsman:14, paladin:9, assassin:16, angel:10,
-  swordmaster:15, spearKnight:12, templar:7, duelist:16 };
+  swordmaster:15, spearKnight:12, templar:7, duelist:16,
+  rookieKnight:8, noviceArcher:13, apprMage:11, touristAdv:10, pkPlayer:16 };
 // art → archetype (เฉพาะมอนธรรมดา; บอส/แรร์ไม่ใช้)
 const ENEMY_ARCH = {
   slime:'normal', adventurer:'normal', soldier:'tank',
@@ -3112,6 +3292,7 @@ const ENEMY_ARCH = {
   mage:'immune', swordsman:'glass', paladin:'buffer',
   assassin:'glass', angel:'buffer',
   swordmaster:'glass', spearKnight:'normal', templar:'tank', duelist:'glass',
+  rookieKnight:'normal', noviceArcher:'glass', apprMage:'normal', touristAdv:'normal', pkPlayer:'glass',
 };
 // ชุดสกิลตาม archetype (override พฤติกรรม)
 const ARCH_SKILLS = {
@@ -3153,6 +3334,12 @@ const LORE = {
   voidqueen:'ราชินีเวหานิรันดร์ ผู้ปกครองยอดหอลอยฟ้า เกิดจากความกลัวของเทพธิดาที่ก่อตัวเป็นรูปร่าง — ผู้พิชิตนางคือเจ้าแห่งหอคอยตัวจริง',
   bear:'หมียักษ์แห่งขุนเขาหิมะ หลับจำศีลมานานปี ใครบังอาจปลุกจะได้เจอกรงเล็บที่ฉีกเหล็กได้ (ไม่ใช่ไก่นะ!)',
   rolbox:'ตัวละคร Roblox ลึกลับชื่อ rolbox11231 หลานของจอมมารสร้างไว้ มารับเชิญในต่างโลก กระโดดยุกยิกตีไม่เข้า อยู่ครบ 7 เทิร์นก็ left the game ทิ้งเสื้อ "Noob" ไว้ให้',
+  rookieKnight:'อัศวินมือใหม่หมวกหม้อ ดาบไม้ฝึกหัด เพิ่งมาถึงชั้น 1 ด้วยความฝันอยากเป็นฮีโร่ ตั้งการ์ดเก่งแต่ตียังเบา',
+  noviceArcher:'นักธนูฝึกหัดสายตายังไม่นิ่ง ลูกพลาดบ่อยกว่าโดน แต่ขยันชาร์จเล็งจริงจัง น่ารักดี',
+  apprMage:'เด็กฝึกเวทหมวกแหลม ท่องคาถาตะกุกตะกัก บางทีร่ายมึนงงใส่คู่ต่อสู้ได้ (โดยบังเอิญ)',
+  touristAdv:'นักท่องเที่ยวมือใหม่ถือกล้องกับแผนที่ มาเที่ยวหอคอยตามรีวิว ไม่คิดจะสู้จริงจังแต่ก็พกดาบมาด้วยนะ',
+  pkPlayer:'นักล่าผู้เล่นใหม่ (PK) — ฮู้ดดำตาแดง คอยลอบสังหารและปล้นมือใหม่ในชั้น 1 ถูกทางการขึ้นบัญชี "บุคคลอันตราย" เลือดเย็นและว่องไว',
+  guardian1:'อสูรผู้พิทักษ์ประตูชั้นหนึ่ง — หนึ่งใน 100 ผู้พิทักษ์ที่ "ผู้สร้างหอ (Dev)" ปั้นขึ้นมาเฝ้าด่าน เขาโง้ง เขี้ยวคม แต่เป็นด่านทดสอบที่อ่อนที่สุดในบรรดาผู้พิทักษ์ทั้งหมด',
 };
 
 // ☄️ Easter Egg: นักรบน้ำอัดลม
@@ -3182,6 +3369,7 @@ const BESTIARY_STAGES = [
   { name:'❄️ ด่าน 4 ภูเขาหิมะ', arts:['paladin','assassin'] },
   { name:'⛩️ ด่าน 5 วิหารเวหา', arts:['angel'] },
   { name:'👑 บอสผู้พิทักษ์', arts:['holyknight','archmage','golddragon','hero','goddess'] },
+  { name:'🗼 หอคอยชั้น 1 — เมืองมือใหม่', arts:['rookieKnight','noviceArcher','apprMage','touristAdv','pkPlayer','guardian1'] },
   { name:'🗼 หอลอยฟ้า — นักผจญภัยมืออาชีพ', arts:['swordmaster','spearKnight','templar','duelist'] },
   { name:'🗼 หอลอยฟ้า — เจ้ายอดหอ', arts:['archlord','voidqueen'] },
   { name:'✨ มอนสเตอร์หายาก & ลับ', arts:['goldslime','mimic','nightmare','soda','bear','rolbox','imp'] },
@@ -3639,11 +3827,13 @@ function hitEnemy(e, rawMult, opts){
   dmg *= (1 - (e.guardPct || 0));
   if (e.debuffs.vuln > 0) dmg *= 1.3;
   e.hp -= dmg;
+  if (dmg >= 1000000) unlockAch('big-hit');
+  if ((S.buffs.combo||0) >= 10) unlockAch('combo-10');
   const i = enemies.indexOf(e);
   spawnText($('battle-area'), (isCrit?'💥 ':'') + fmt(dmg) + (isCrit?'!!':''), null, isCrit?'crit':'', .45 + i*.18, rand(.2,.4));
   fxBurst('enemy', isCrit ? '💥' : (opts.icon || '🗡️'), isCrit);
   hitFlash('eart-' + i);
-  const ea = $('eart-' + i); if (ea){ ea.classList.remove('recoil'); void ea.offsetWidth; ea.classList.add('recoil'); setTimeout(()=>{ if(ea) ea.classList.remove('recoil'); }, 430); }
+  pulseEnemy(i, 'recoil', 430);   // ศัตรูถอยกระแทกเมื่อโดนตี (หน่วงหลัง render)
   if (isCrit) shakeHard();
   return dmg;
 }
@@ -3656,7 +3846,11 @@ function applyDebuff(e, key, n){
   e.debuffs[key] = (e.debuffs[key] || 0) + n;
   if (key === 'poison' && e.debuffs.poison >= 10) unlockAch('poison-master');
   const ICONS = { poison:'☠️', burn:'🔥', weak:'💫', vuln:'🎯' };
-  spawnText($('battle-area'), ICONS[key] + '+' + n, null, 'stress', .5 + enemies.indexOf(e)*.15, .5);
+  const i = enemies.indexOf(e);
+  spawnText($('battle-area'), ICONS[key] + '+' + n, null, 'stress', .5 + i*.15, .5);
+  pulseEnemy(i, 'debuff-pop', 500);   // 🌀 อนิเมชันตอนติดดีบัฟ (หน่วงหลัง render)
+  fxBurst('enemy', ICONS[key]);
+  beep(key==='burn'?520:(key==='poison'?300:400), .07, key==='weak'?'sine':'sawtooth', .04);
 }
 // 🗡️ ตัวคูณดาเมจคอมโบดาบคู่ — ยิ่งฟันต่อเนื่องยิ่งทวีคูณ (รีเซ็ตทุกต้นเทิร์น)
 function comboMult(){
@@ -3793,19 +3987,19 @@ function playCard(idx){
     if (S.classId === 'twinblade' && S.buffs.combo > 0)
       spawnText($('battle-area'), '⚡ คอมโบ ×' + S.buffs.combo + ' (ดาเมจ +' + Math.round((comboMult()-1)*100) + '%)', null, 'crit', .18, .5);
   }
-  if (c.surecrit){ S.buffs.surecrit = true; fxBurst('player', '🗡️'); spawnText($('battle-area'), '🗡️ คริแน่นอน!', null, 'crit', .15, .4); }
+  if (c.surecrit){ S.buffs.surecrit = true; fxBurst('player', '🗡️'); buffFlash(); spawnText($('battle-area'), '🗡️ คริแน่นอน!', null, 'crit', .15, .4); }
   if (c.hackCd && c.type !== 'atk'){ const t = curTarget(); if (t) hackEnemyCd(t, c.hackCd); beep(440,.08,'square',.04); }
   if (c.hackCdAll && c.type !== 'atk'){ aliveEnemies().forEach(e => hackEnemyCd(e, c.hackCdAll)); }
   if (c.block || c.blockFlat){
     if (c.block) S.blockPct = Math.min(.95, S.blockPct + c.block);
     if (c.blockFlat) S.blockFlat = (S.blockFlat||0) + c.blockFlat;
-    fxBurst('player', '🛡️');
+    fxBurst('player', '🛡️'); pulseClass($('player-art'), 'shield-flash', 460);
     beep(300,.08,'triangle',.04); setTimeout(()=>beep(380,.1,'triangle',.04), 80);
   }
-  if (c.counter){ S.buffs.counter += c.counter; fxBurst('player', '⚔️'); spawnText($('battle-area'), '⚔️ ท่าสวนกลับ! สะท้อน ' + Math.round(c.counter*100) + '%', null, 'crit', .15, .4); }
-  if (c.str){ S.buffs.str += c.str; fxBurst('player', '💪'); spawnText($('battle-area'), '💪 พลัง+' + c.str, null, 'crit', .15, .4); }
-  if (c.momentum){ S.buffs.momentum += c.momentum; spawnText($('battle-area'), '🌀 โมเมนตัม+' + c.momentum, null, 'auto', .15, .45); }
-  if (c.dfire){ S.buffs.dfire = true; fxBurst('player', '🐉'); }
+  if (c.counter){ S.buffs.counter += c.counter; fxBurst('player', '⚔️'); buffFlash(); spawnText($('battle-area'), '⚔️ ท่าสวนกลับ! สะท้อน ' + Math.round(c.counter*100) + '%', null, 'crit', .15, .4); }
+  if (c.str){ S.buffs.str += c.str; fxBurst('player', '💪'); buffFlash(); spawnText($('battle-area'), '💪 พลัง+' + c.str, null, 'crit', .15, .4); }
+  if (c.momentum){ S.buffs.momentum += c.momentum; buffFlash(); spawnText($('battle-area'), '🌀 โมเมนตัม+' + c.momentum, null, 'auto', .15, .45); }
+  if (c.dfire){ S.buffs.dfire = true; fxBurst('player', '🐉'); buffFlash(); }
   if (c.weakAll){ aliveEnemies().forEach(e => applyDebuff(e, 'weak', c.weakAll)); }
   if (c.burnAll){ aliveEnemies().forEach(e => applyDebuff(e, 'burn', c.burnAll)); }
   if (c.stress && c.stress < 0){ fxBurst('player', '🧘'); beep(520,.12,'triangle',.04); }
@@ -3958,11 +4152,12 @@ function forceRemainingEnemies(after){
 
 function enemyHit(e, raw){
   if (e.debuffs.weak > 0) raw *= .7;
+  const hadBlock = (S.blockPct > 0) || ((S.blockFlat || 0) > 0);
+  const absorbed = Math.max(0, Math.round(raw - (raw * (1 - S.blockPct) - (S.blockFlat || 0))));
   let eff = raw * (1 - S.blockPct) - (S.blockFlat || 0);
   let taken = 0;
   if (eff <= 0){
-    spawnText($('battle-area'), '🛡️ บล็อกหมด!', null, 'heal', .15, rand(.3,.45));
-    beep(330, .08, 'triangle', .04);
+    shieldClang('🛡️ บล็อกหมด! (กัน ' + fmt(absorbed) + ')', true);   // 🛡️ โล่วาบ+เสียงโลหะ+ประกาย
     // 🛡️ จอมมารโล่: ฟื้นเลือดเมื่อบล็อกหมด
     if (S.classId === 'demonking') healPlayer(Math.ceil(S.maxHp * .03));
   } else {
@@ -3971,6 +4166,7 @@ function enemyHit(e, raw){
     else if (S.stress >= 5) mult = 1.2;
     else if (S.stress >= 3) mult = 1.1;
     taken = Math.max(1, Math.ceil(eff * mult));
+    if (hadBlock && absorbed > 0) shieldClang('🛡️ กันบางส่วน ' + fmt(absorbed), false);   // กันได้บางส่วน
     S.hp -= taken;
     S.tookDmgThisBattle = true;
     // 🛡️ passive "หนามสะท้อน": สะท้อนดาเมจกลับใส่ผู้โจมตี
@@ -3992,6 +4188,7 @@ function enemyHit(e, raw){
   }
   // ⚔️ จอมมารโล่: ท่าสวนกลับ — โดนตี (บล็อกได้/ไม่ได้) แล้วสะท้อนดาเมจกลับทันที
   if (S.buffs && S.buffs.counter > 0 && e && e.hp > 0){
+    unlockAch('shield-counter');
     const cd = Math.max(1, Math.ceil(S.power * S.buffs.counter * (1 - (e.guardPct || 0))));
     e.hp -= cd;
     const ci = enemies.indexOf(e);
@@ -4007,6 +4204,7 @@ function enemyTakeTurn(e){
   e.acted = true;        // ออกท่าแล้ว จบเทิร์นมันจนกว่าผู้เล่นจะเริ่มเทิร์นใหม่
   e.guardPct = 0;
   const it = e.intent;
+  if (['attack','double','weaponskill','execute'].includes(it)) enemyLunge(e);   // ⚔️ พุ่งเข้าโจมตี
   if (it === 'attack'){
     const raw = e.atk * (e.charged ? 2 : 1);
     e.charged = false;
@@ -4302,6 +4500,8 @@ function winBattle(){
   // 🗼 หอลอยฟ้า: ดรอปของสวมใส่เฉพาะ elite/rare (มีโอกาสไม่ดรอป) — บอสการันตีที่ floorCleared
   if (isTower()){
     const isBossNode = (S.tower.idx + 1) >= TOWER_NODES;
+    if (lead.art === 'guardian1') unlockAch('guardian-1');
+    if (lead.isPK) unlockAch('pk-slayer');
     if (!isBossNode && (lead.tier === 2 || lead.tier === 4 || lead.rare) && chance(.5)){
       const it = genEquip(S.tower.floor, lead.tier === 4 ? 'epic' : rollRarity(Math.max(1, S.tower.floor - 2)));
       S.bag.push(it); markEquipSeen(it);
@@ -4464,6 +4664,8 @@ function gainRelic(id){
   const r = RELICS[id];
   if (r.apply) r.apply(S);
   markRelicSeen(id);
+  unlockAch('first-relic');
+  if (S.relics.length >= 5) unlockAch('relic-hoard');
   updateHud();
   showToast('💎 ได้ของวิเศษ: ' + r.icon + ' ' + r.name);
 }
@@ -4511,7 +4713,7 @@ function offerHackerCards(then){
       const el = document.createElement('div');
       el.className = 'pick-card ' + rarityClass(c);
       el.innerHTML = '<div class="icon">'+c.icon+'</div><div class="cname">'+c.name+'</div><div class="cdesc">⚡'+c.cost+' — '+c.desc+(c.rarity==='epic'?'<br><b style="color:#7d3c98">★ EPIC</b>':'')+'</div>';
-      el.onclick = () => { S.deck.push(id); markCardSeen(id); picks--; beep(520,.1,'square'); updateHud(); showOverlay('card-overlay', false); setTimeout(round, 120); };
+      el.onclick = () => { S.deck.push(id); markCardSeen(id); unlockAch('hacker-heist'); picks--; beep(520,.1,'square'); updateHud(); showOverlay('card-overlay', false); setTimeout(round, 120); };
       row.appendChild(el);
     });
     showOverlay('card-overlay', true);
@@ -4526,7 +4728,12 @@ const SPECIAL_LOG = {
   soda:    { icon:'🥤', name:'นักรบน้ำอัดลม',      lore:'นักรบจากมิติโฆษณา อยู่ยงคงกระพัน รอด 7 เทิร์นแล้วบินจากไป ทิ้ง "น้ำอัดลมในตำนาน" ไว้ให้' },
   rolbox:  { icon:'🟥', name:'rolbox11231',         lore:'ตัวละคร Roblox ของหลานจอมมาร กระโดดยุกยิกตีไม่เข้า ครบ 7 เทิร์น left the game ทิ้งเสื้อ "Noob"' },
 };
-function markSpecial(id){ if (!META.specialSeen) META.specialSeen = {}; META.specialSeen[id] = (META.specialSeen[id]||0) + 1; saveMeta(); }
+function markSpecial(id){
+  if (!META.specialSeen) META.specialSeen = {};
+  META.specialSeen[id] = (META.specialSeen[id]||0) + 1; saveMeta();
+  if (id === 'rolbox') unlockAch('egg-rolbox');
+  if (Object.keys(SPECIAL_LOG).every(k => META.specialSeen[k])) unlockAch('egg-master');
+}
 function applyBahamatPassive(){
   if (S._bahamatPassive) return;
   S._bahamatPassive = true;
@@ -4550,6 +4757,7 @@ function bahamatEvent(cb){
       [ { label:'🐲 รับเลี้ยงเบบี้บาฮามุท (รับมรดกมังกร!)', fn:()=>{
             S.babyBahamut = newSummon('babybahamut');   // ช่องที่ 3 อิสระ — ไม่ยุ่งกับ S.summons
             applyBahamatPassive();
+            unlockAch('egg-bahamat');
             // 🔥 VFX/SFX ปิดฉาก (เอพิค)
             f.querySelector('.n999').textContent = '🐲🔥';
             f.querySelector('.t999').textContent = '「สายเลือดมังกรตื่นขึ้น! พลัง ×2 · พลังงาน +1!」';
@@ -4580,6 +4788,61 @@ function eventRelicShrine(){
     [ { label:'✋ หยิบของวิเศษ (เครียด +2)', fn:()=>{ addStress(2); showOverlay('event-overlay', false); offerRelic(()=>showPaths()); } },
       { label:'🚶 ไม่เสี่ยง เดินจากไป', fn:()=>eventResult(ART.altar, '💎 แท่นบูชา', 'เจ้าเดินจากของวิเศษไปอย่างสงบ...') } ]);
 }
+
+// ============================================================
+// 🗼 เหตุการณ์เมืองท่องเที่ยว ชั้น 1 (NPC / ร้านค้า)
+// ============================================================
+function eventF1Souvenir(){
+  const cost = 30;
+  renderEvent(ART.npcShop, '🛍️ ร้านของที่ระลึกหอคอย',
+    'พ่อค้าอ้วนยิ้มแฉ่ง 「ของที่ระลึกชั้น 1 จ้าาา! ซื้อติดมือไว้เป็นมงคล~」<br>เจ้าจะ...?',
+    [ { label:'🎁 ซื้อของฝาก ('+cost+' ทอง — สุ่มไอเทมดี)', disabled:S.gold<cost||S.items.length>=MAX_ITEMS, fn:()=>{
+          S.gold-=cost; const it=pick(ITEM_KEYS); S.items.push(it);
+          eventResult(ART.npcShop, '🛍️ ได้ของฝาก!', 'พ่อค้าห่อของอย่างดี ได้ <b>'+ITEM_DEFS[it].icon+' '+ITEM_DEFS[it].name+'</b>!'); } },
+      { label:'😈 ขู่เอาของฟรี (เครียด +1)', fn:()=>{
+          addStress(1); let txt='พ่อค้าตัวสั่น ยกของให้ฟรี!';
+          if (S.items.length<MAX_ITEMS){ const it=pick(ITEM_KEYS); S.items.push(it); txt+='<br>ได้ <b>'+ITEM_DEFS[it].icon+' '+ITEM_DEFS[it].name+'</b>'; }
+          eventResult(ART.npcShop, '😈 จอมมารก็คือจอมมาร', txt+' (แต่ใจหวิวๆ เครียด +1)'); } },
+      { label:'🚶 เดินดูเฉยๆ', fn:()=>eventResult(ART.npcShop, '🛍️ ร้านของที่ระลึก', 'เจ้าเดินชมแล้วจากไป... พ่อค้าถอนหายใจโล่งอก') } ]);
+}
+function eventF1Inn(){
+  renderEvent(ART.npcInn, '🏨 โรงเตี๊ยมนักผจญภัย',
+    'เจ้าของโรงเตี๊ยมโบกมือ 「พักก่อนไหมจ๊ะ ห้องสะอาด อาหารอร่อย!」',
+    [ { label:'🛏️ พักค้างคืน (ฟื้นเลือดเต็ม, เครียด -3)', fn:()=>{
+          S.hp=S.maxHp; addStress(-3);
+          eventResult(ART.npcInn, '🏨 หลับสบาย...', 'เตียงนุ่มฟู ตื่นมาสดชื่นเต็มเปี่ยม!<br><b>ฟื้นเลือดเต็ม + คลายเครียด -3</b> 😴') ; } },
+      { label:'🍲 กินมื้อใหญ่ (ฟื้นเลือด 40%, เครียด -1)', fn:()=>{
+          S.hp=Math.min(S.maxHp,Math.ceil(S.hp+S.maxHp*.4)); addStress(-1);
+          eventResult(ART.npcInn, '🍲 อิ่มหมีพีมัน', 'สตูว์ปีศาจรสเด็ด! <b>ฟื้นเลือด 40% + เครียด -1</b>'); } } ]);
+}
+function eventF1Guide(){
+  renderEvent(ART.npcGuide, '🚩 ไกด์นำเที่ยวชั้น 1',
+    'ไกด์สาวกระตือรือร้น 「ยินดีต้อนรับสู่หอลอยฟ้าค่ะ! รับบริการแนะนำไหมคะ?」',
+    [ { label:'📈 ฟังเคล็ดลับนักสู้ (พลัง +15% รันนี้)', fn:()=>{
+          S.power=Math.ceil(S.power*1.15);
+          eventResult(ART.npcGuide, '🚩 ความรู้คือพลัง!', 'ไกด์สอนเทคนิคลับของนักผจญภัยรุ่นเก๋า<br><b>พลังโจมตี +15%!</b> ⚔️'); } },
+      { label:'💰 ขอทางลัดเก็บของ (ได้ทอง)', fn:()=>{
+          const g=egold(40,4); S.gold+=g;
+          eventResult(ART.npcGuide, '🚩 ทางลัดลับ', 'ไกด์พาไปเก็บของตามซอก ได้ <b>+'+fmt(g)+' ทอง</b> 💰'); } } ]);
+}
+function eventF1Scam(){
+  renderEvent(ART.npcShop, '🤑 พ่อค้าเร่ "ของแท้ราคาถูก"',
+    'พ่อค้าแว่นดำกระซิบ 「ของหายากกล่องสุ่ม! ลงทุนนิดเดียว รวยทันที (มั้ง)」<br>ทอย 🎲 ≥4 ได้ของดี ไม่งั้นโดนตุ๋น!',
+    [ { label:'🎲 ซื้อกล่องสุ่ม (เสี่ยงดวง!)', danger:true, disabled:S.gold<40, fn:()=>{
+          S.gold-=40;
+          rollDiceAnim(4,(d,ok)=>{
+            if (ok){ const g=egold(120,6); S.gold+=g; eventResult(ART.npcShop,'🤑 ได้ของแท้!','เฮ้ย! ในกล่องมีทองเพียบ! <b>+'+fmt(g)+' ทอง</b> 💰'); }
+            else { eventResult(ART.npcShop,'🤑 โดนตุ๋น!','ในกล่องมีแค่... ก้อนหิน 🪨 พ่อค้าหายไปแล้ว! (เสีย 40 ทอง)'); }
+          }); } },
+      { label:'🚶 ไม่หลงกล (เดินจากไป)', fn:()=>eventResult(ART.npcShop,'🤑 พ่อค้าเร่','จอมมารไม่โง่... เดินจากไป พ่อค้าทำหน้าเซ็ง') } ]);
+}
+function eventF1Viewpoint(){
+  renderEvent(ART.tower, '🌅 จุดชมวิวขอบหอคอย',
+    'ขอบระเบียงชั้น 1 มองเห็นเมฆทอดยาวสุดลูกหูลูกตา...<br>ลมเย็นพัดโชย จิตใจสงบลง',
+    [ { label:'🧘 พักชมวิว (เครียด -4)', fn:()=>{ addStress(-4); eventResult(ART.tower,'🌅 ใจสงบ','เจ้ายืนชมเมฆเงียบๆ ความเครียดละลายไปกับสายลม <b>เครียด -4</b>'); } },
+      { label:'📸 ถ่ายรูปเก็บไว้ (ฟื้นเลือด 20%)', fn:()=>{ S.hp=Math.min(S.maxHp,Math.ceil(S.hp+S.maxHp*.2)); eventResult(ART.tower,'📸 ภาพสวย','วิวสวยจนใจฟู <b>ฟื้นเลือด 20%</b> ✨'); } } ]);
+}
+const FLOOR1_EVENTS = [ eventF1Souvenir, eventF1Inn, eventF1Guide, eventF1Scam, eventF1Viewpoint ];
 
 // ============================================================
 // PATH CHOICE
@@ -4956,6 +5219,12 @@ function eventVoidStorm(){
 }
 
 function showRandomEvent(){
+  // 🗼 ชั้น 1 = เมืองท่องเที่ยว → ใช้เหตุการณ์ NPC/ร้านค้าเฉพาะชั้น (+โอกาสเจอกับดัก/แท่นวิเศษบ้าง)
+  if (isTower() && S.tower.floor === 1){
+    if (chance(.18)) return eventBandit();        // บุคคลอันตรายแฝงตัว
+    if (chance(.10)) return eventRelicShrine();
+    return pick(FLOOR1_EVENTS)();
+  }
   // หมายเหตุ: วิหารเปลี่ยนอาชีพถูกถอดออกแล้ว — อาชีพเปลี่ยนกลางทางไม่ได้อีกต่อไป (มีแต่วิวัฒน์ Tier 2)
   const events = [
     { w:15, fn: eventChest },
@@ -5781,6 +6050,7 @@ function gameOver(){
     const i = S.relics.indexOf('phoenixFeather');
     if (i >= 0) S.relics.splice(i, 1);   // ลบ relic ออกทันที (ใช้แล้วหมด)
     S._phoenixUsed = true;
+    unlockAch('phoenix-revive');
     S.hp = Math.ceil(S.maxHp * .4);
     const f = $('flash-999');
     f.querySelector('.n999').textContent = '🪶🔥';
@@ -5988,7 +6258,12 @@ function towerAtk(F,N){ return Math.max(1, HELL_END_ATK * 1.05 * TOWER_DIFF * Ma
 function towerGold(F,N){ return Math.ceil(40 + F*25 + N*3); }
 function isTower(){ return !!(S && S.tower && S.tower.active); }
 
-const TOWER_ARTS = new Set(['swordmaster','spearKnight','templar','duelist']);
+const TOWER_ARTS = new Set(['swordmaster','spearKnight','templar','duelist','rookieKnight','noviceArcher','apprMage','touristAdv','pkPlayer','guardian1']);
+// 🗼 ชั้น 1 — เมืองท่องเที่ยวนักผจญภัยมือใหม่ (pool เฉพาะชั้น)
+const FLOOR1_POOL = [
+  ['rookieKnight','อัศวินมือใหม่ดาบไม้'], ['noviceArcher','นักธนูฝึกหัด'],
+  ['apprMage','เด็กฝึกเวท'], ['touristAdv','นักท่องเที่ยวหลงทาง']
+];
 const TOWER_POOL = [
   ['swordmaster','นักดาบคู่หอคอย'], ['spearKnight','อัศวินหอกเวหา'],
   ['templar','เทมพลาร์ผนึก'],      ['duelist','นักประลองเงา'],
@@ -5997,7 +6272,7 @@ const TOWER_POOL = [
   ['swordsman','นักดาบรับจ้าง'],   ['archer','พรานเวหา'], ['angel','เทวทูตผู้พิทักษ์']
 ];
 const TOWER_BOSSES = {
-  1:{art:'knight',      name:'อัศวินผู้เฝ้าชั้นหนึ่ง'},
+  1:{art:'guardian1',   name:'อสูรผู้พิทักษ์ประตูชั้นหนึ่ง'},
   2:{art:'swordmaster', name:'ปรมาจารย์ดาบคู่'},
   3:{art:'paladin',     name:'พาลาดินแสงทอง'},
   4:{art:'duelist',     name:'ราชานักประลอง'},
@@ -6021,7 +6296,8 @@ const TOWER_BOSSES = {
 function towerWskName(art){
   return ({ swordmaster:'สตาร์เบิร์สสตรีม', spearKnight:'ทวนพายุเวหา', templar:'ตัดสินศักดิ์สิทธิ์',
             duelist:'จ้วงสายฟ้า', knight:'ฟันทลายเกราะ', paladin:'ค้อนแห่งแสง',
-            assassin:'ปลิดชีพเงา', swordsman:'วงเดือนเหล็ก' })[art] || 'ท่าไม้ตาย';
+            assassin:'ปลิดชีพเงา', swordsman:'วงเดือนเหล็ก',
+            guardian1:'ลมหายใจอสูรเฝ้าประตู', pkPlayer:'ลอบสังหารเลือดเย็น' })[art] || 'ท่าไม้ตาย';
 }
 function tagWeaponskill(f){ f.wskName = towerWskName(f.art); return f; }
 
@@ -6029,6 +6305,7 @@ function tagWeaponskill(f){ f.wskName = towerWskName(f.art); return f; }
 function buildTowerEnemies(tier){
   const F = S.tower.floor, N = Math.min(TOWER_NODES, S.tower.idx + 1);
   const bh = towerHp(F,N), ba = towerAtk(F,N), bg = towerGold(F,N);
+  const pool = (F === 1) ? FLOOR1_POOL : TOWER_POOL;   // ชั้น 1 = นักผจญภัยมือใหม่
   enemies = []; S.target = 0;
   if (tier === 3){
     const b = TOWER_BOSSES[F] || TOWER_BOSSES[20];
@@ -6036,15 +6313,20 @@ function buildTowerEnemies(tier){
     const f = makeUnit({ hp, maxHp:hp, atk:Math.ceil(ba*1.4), gold:Math.ceil(bg*4),
       art:b.art, name:'👑 '+b.name, isBoss:true, tier:3, speed:12, wskName:towerWskName(b.art) });
     enemies.push(f);
-    if (F >= 3){ const m = makeFoe(pick(TOWER_POOL)[0], 'องครักษ์บอส', bh*0.4, ba*0.5, 5); m.tier=1; tagWeaponskill(m); enemies.push(m); }
-    if (F >= 12){ const m2 = makeFoe(pick(TOWER_POOL)[0], 'องครักษ์บอส', bh*0.4, ba*0.5, 5); m2.tier=1; tagWeaponskill(m2); enemies.push(m2); }
+    if (F >= 3){ const m = makeFoe(pick(pool)[0], 'องครักษ์บอส', bh*0.4, ba*0.5, 5); m.tier=1; tagWeaponskill(m); enemies.push(m); }
+    if (F >= 12){ const m2 = makeFoe(pick(pool)[0], 'องครักษ์บอส', bh*0.4, ba*0.5, 5); m2.tier=1; tagWeaponskill(m2); enemies.push(m2); }
   } else if (tier === 2){
-    if (chance(.45)){
-      const e = pick(TOWER_POOL);
+    if (F === 1){
+      // ☠️ ชั้น 1 elite = "นักล่าผู้เล่นใหม่ (PK)" — บุคคลอันตราย!
+      const f = makeUnit({ hp:Math.ceil(bh*1.8), maxHp:Math.ceil(bh*1.8), atk:Math.ceil(ba*1.5), gold:Math.ceil(bg*3),
+        art:'pkPlayer', name:'☠️ นักล่าผู้เล่นใหม่ (PK)', tier:2, speed:16, wskName:towerWskName('pkPlayer'), isPK:true, arch:'glass' });
+      enemies.push(f);
+    } else if (chance(.45)){
+      const e = pick(pool);
       const f = makeFoe(e[0], '⭐ '+e[1], bh*1.9, ba*1.3, bg*2.2); f.tier=2; tagWeaponskill(f); enemies.push(f);
     } else {
       const n = chance(.5) ? 3 : 2;
-      for (let i=0;i<n;i++){ const e=pick(TOWER_POOL); const f=makeFoe(e[0], e[1], bh*0.85, ba*0.62, bg*1.0); f.tier=2; tagWeaponskill(f); enemies.push(f); }
+      for (let i=0;i<n;i++){ const e=pick(pool); const f=makeFoe(e[0], e[1], bh*0.85, ba*0.62, bg*1.0); f.tier=2; tagWeaponskill(f); enemies.push(f); }
     }
   } else if (tier === 4){
     const rare = pick(RARES);
@@ -6057,7 +6339,7 @@ function buildTowerEnemies(tier){
     if (chance(.025)){ enemies.push(makeUnit({ hp:1, maxHp:1, atk:0, gold:0, art:'rolbox', name:ROLBOX.name, tier:1, invuln:true, debuffImmune:true, sodaTurns:0, speed:999 })); return; }
     let count = 1; if (chance(.5)) count++; if (chance(.4)) count++; count = Math.min(3, count);
     const split = count===1 ? 1 : (count===2 ? .6 : .46);
-    for (let i=0;i<count;i++){ const e=pick(TOWER_POOL); const f=makeFoe(e[0], e[1], bh/count*rand(.85,1.15), ba*split, Math.ceil(bg/count)+2); tagWeaponskill(f); enemies.push(f); }
+    for (let i=0;i<count;i++){ const e=pick(pool); const f=makeFoe(e[0], e[1], bh/count*rand(.85,1.15), ba*split, Math.ceil(bg/count)+2); tagWeaponskill(f); enemies.push(f); }
   }
 }
 
@@ -6193,6 +6475,8 @@ function equipItem(bagIdx){
   S.equip[it.slot] = it;
   if (it.grantCard) S.deck.push(it.grantCard);
   applyEquipment();
+  unlockAch('first-equip');
+  if (S.equip.weapon && S.equip.armor && S.equip.accessory) unlockAch('full-equip');
   beep(620,.1,'square',.05); setTimeout(()=>beep(820,.1,'square',.05),70);
   renderEquip();
 }
@@ -6271,10 +6555,13 @@ function attemptRefine(entry){
   if (r < o.success){
     it.plus = plus + 1;
     applyEquipment();
+    if (it.plus >= 5) unlockAch('refine-5');
+    if (it.plus >= 10) unlockAch('refine-10');
     beep(523,.1,'square',.06); setTimeout(()=>beep(784,.12,'square',.06),100); setTimeout(()=>beep(1047,.18,'square',.06),210);
     showToast('✨ ตีบวกสำเร็จ! ' + it.icon + ' ' + it.name + ' +' + it.plus);
     openRefine();
   } else if (r < o.success + o.breakChance){
+    unlockAch('refine-broke');
     // 💥 พังถาวร — ลบทิ้ง
     if (it.grantCard){ const k = S.deck.indexOf(it.grantCard); if (k>=0) S.deck.splice(k,1); }
     if (entry.loc === 'equip') S.equip[entry.slot] = null;
@@ -6315,6 +6602,7 @@ function askTowerEntry(){
       { label:'🏰 รับรางวัลครองโลก กลับปราสาท', fn:()=>{ showOverlay('event-overlay', false); victory(); } } ]);
 }
 function enterTowerContinue(){
+  unlockAch('tower-enter');
   // ยกฐานข้อมูลรันนี้ (เด็ค/พลัง/relic/summon/ไอเทม/ทอง/อาชีพ/วิวัฒน์) เข้าหอชั้น 1
   S.tower = { active:true, floor:1, idx:0, map:[] };
   S.equip = { weapon:null, armor:null, accessory:null };
@@ -6327,6 +6615,16 @@ function enterTowerContinue(){
 }
 function generateFloorMap(floor){
   const map = [];
+  if (floor === 1){
+    // 🗼 ชั้น 1 = เมืองท่องเที่ยวมือใหม่: เหตุการณ์/ร้าน/พักเยอะ + นักล่า PK 1 จุด
+    const arr = shuffle(['event','treasure','rest','event','battle','treasure','rest']);  // 7 โหนด (จะเติมเป็น 8)
+    arr.unshift('battle');                              // โหนด 1 = สู้มือใหม่ วอร์มอัป
+    arr[2 + Math.floor(Math.random()*4)] = 'elite';     // แทรกนักล่า PK 1 จุด (โหนด 3-6)
+    arr.slice(0, TOWER_NODES - 2).forEach(t => map.push(makeNodeCell(t)));
+    map.push(makeNodeCell('choice'));
+    map.push(makeNodeCell('boss'));
+    return map;
+  }
   // โหนด 1..28: สุ่มแบบ fix (เห็นล่วงหน้า)
   const bag = ['battle','battle','battle','battle','elite','elite','event','treasure','rest'];
   for (let i = 0; i < TOWER_NODES - 2; i++){
@@ -6356,6 +6654,12 @@ function startFloor(floor){
   applyClassVisual();
   updateHud();
   saveRun('tower');
+  // 🗼 เนื้อเรื่องเปิดชั้น 1 (ครั้งแรกที่เหยียบชั้นนี้)
+  if (floor === 1 && !META.floor1Seen){
+    META.floor1Seen = true; saveMeta();
+    showDialogue(FLOOR1_INTRO, () => { showScreen('game-screen'); showTowerMap(true); });
+    return;
+  }
   showTowerMap(true);
 }
 function showTowerMap(intro){
@@ -6413,6 +6717,7 @@ function spinGoddessRoulette(onDone){
       if (chosen.good) setTimeout(()=>beep(1175,.25,'square',.05),120);
       S.nodeBuff = { powerMul:1, energy:0, blockFlat:0, drawMod:0 };
       chosen.apply();
+      if (chosen.name === 'แจ็คพอตเทพ!') unlockAch('roulette-jackpot');
       updateHud();
       setTimeout(() => { fx.classList.remove('active'); if (onDone) onDone(); }, 1500);
     }
@@ -6495,6 +6800,9 @@ function floorCleared(){
   const F = S.tower.floor;
   META.towerBestFloor = Math.max(META.towerBestFloor||0, F);
   dailyProgress('floor', 1);   // 📅 ภารกิจรายวัน
+  if (F >= 1) unlockAch('tower-f1');
+  if (F >= 5) unlockAch('tower-f5');
+  if (F >= 10) unlockAch('tower-f10');
   saveMeta();
   const drop = genEquip(F, bossDropRarity(F));
   S.bag.push(drop);
@@ -6527,6 +6835,7 @@ function towerVictory(){
   S.tower.active = false;
   clearSave();
   setBgm('normal');
+  unlockAch('tower-summit');
   META.towerWins = (META.towerWins||0) + 1;
   const gain = 1500 + (META.towerBestFloor||TOWER_FLOORS)*60;
   META.shards += gain; saveMeta();
@@ -6561,6 +6870,7 @@ function ensureDaily(){
   if (META.daily && META.daily.date === today) return;
   const prev = META.daily;
   const streak = (prev && prev.date === yesterdayStr()) ? (prev.streak||1) + 1 : 1;
+  if (streak >= 7 && typeof unlockAch === 'function') unlockAch('daily-streak7');
   const picks = shuffle(DAILY_POOL.slice()).slice(0, 3);
   META.daily = { date: today, streak, missions: picks.map(p => ({ id:p.id, goal:p.goal, reward:p.reward, text:p.desc(p.goal), prog:0, claimed:false })) };
   saveMeta();
@@ -6593,7 +6903,7 @@ function renderDaily(){
     b.disabled = m.claimed || !done;
     b.onclick = () => {
       if (m.claimed || m.prog < m.goal) return;
-      m.claimed = true; META.shards += total; saveMeta();
+      m.claimed = true; META.shards += total; unlockAch('daily-first'); saveMeta();
       beep(660,.1,'square',.06); setTimeout(()=>beep(990,.14,'square',.06),100);
       renderDaily();
       if ($('title-shards')) $('title-shards').textContent = META.shards.toLocaleString();
