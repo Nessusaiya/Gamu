@@ -447,6 +447,8 @@
   .overlay.active { display:flex; }
   /* เด็ค/ของสวมใส่ ต้องลอยเหนือปล่องหอ (#tower-map-overlay) เสมอ เพื่อให้กดดูได้ */
   #deck-overlay, #equip-overlay, #status-overlay { z-index:22; }
+  /* คู่มือวิธีเล่นเนื้อหายาว: เริ่มจากบน + เลื่อนได้ปกติ (กัน flexbox-center ดันส่วนบนออกนอกพื้นที่ scroll) */
+  #howto-overlay { justify-content:flex-start; padding-top:24px; padding-bottom:28px; }
   .overlay h2 { font-family:'Mali',cursive; font-size:1.6rem; margin-bottom:18px; transform:rotate(-1deg); }
   .card-row { display:flex; gap:14px; flex-wrap:wrap; justify-content:center; }
   .pick-card {
