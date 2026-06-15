@@ -447,8 +447,21 @@
   .overlay.active { display:flex; }
   /* เด็ค/ของสวมใส่ ต้องลอยเหนือปล่องหอ (#tower-map-overlay) เสมอ เพื่อให้กดดูได้ */
   #deck-overlay, #equip-overlay, #status-overlay { z-index:22; }
-  /* คู่มือวิธีเล่นเนื้อหายาว: เริ่มจากบน + เลื่อนได้ปกติ (กัน flexbox-center ดันส่วนบนออกนอกพื้นที่ scroll) */
-  #howto-overlay { justify-content:flex-start; padding-top:24px; padding-bottom:28px; }
+  /* คู่มือวิธีเล่น: เป็น "หน้าต่าง" ขนาดพอดี เลื่อนเฉพาะเนื้อหาด้านในด้วยล้อเมาส์ */
+  #howto-overlay { justify-content:center; align-items:center; }
+  .howto-window {
+    background:#fffdf7; border:3px solid #2a2a2a;
+    border-radius:225px 15px 255px 15px / 15px 255px 15px 225px;
+    box-shadow:3px 4px 0 #2a2a2a22;
+    width:100%; max-width:600px; max-height:85vh;
+    display:flex; flex-direction:column; padding:18px 18px 14px;
+  }
+  .howto-window h2 { flex:0 0 auto; margin-bottom:10px; text-align:center; }
+  .howto-scroll {
+    flex:1 1 auto; min-height:0; overflow-y:auto;
+    display:flex; flex-direction:column; gap:12px; padding:2px 8px 2px 2px;
+  }
+  .howto-actions { flex:0 0 auto; display:flex; gap:8px; flex-wrap:wrap; justify-content:center; padding-top:12px; }
   .overlay h2 { font-family:'Mali',cursive; font-size:1.6rem; margin-bottom:18px; transform:rotate(-1deg); }
   .card-row { display:flex; gap:14px; flex-wrap:wrap; justify-content:center; }
   .pick-card {
@@ -4135,8 +4148,10 @@ function healPlayer(amount, allowOverflow){
     const stacks = Math.floor(S._bloodOver / per);
     if (stacks > 0){
       S._bloodOver -= stacks * per;
-      S.buffs.str += stacks;
-      spawnText($('battle-area'), '🩸 เลือดล้น! พลัง+' + stacks, null, 'crit', .15, .35);
+      const prevStr = S.buffs.str;
+      S.buffs.str = Math.min(10, S.buffs.str + stacks);
+      const gained = S.buffs.str - prevStr;
+      if (gained > 0) spawnText($('battle-area'), '🩸 เลือดล้น! พลัง+' + gained + (S.buffs.str >= 10 ? ' (MAX)' : ''), null, 'crit', .15, .35);
     }
   }
 }
@@ -4259,7 +4274,7 @@ function playCard(idx){
     beep(300,.08,'triangle',.04); setTimeout(()=>beep(380,.1,'triangle',.04), 80);
   }
   if (c.counter){ S.buffs.counter += c.counter; fxBurst('player', '⚔️'); buffFlash(); spawnText($('battle-area'), '⚔️ ท่าสวนกลับ! สะท้อน ' + Math.round(c.counter*100) + '%', null, 'crit', .15, .4); }
-  if (c.str){ S.buffs.str += c.str; fxBurst('player', '💪'); buffFlash(); spawnText($('battle-area'), '💪 พลัง+' + c.str, null, 'crit', .15, .4); }
+  if (c.str){ const prevStr2 = S.buffs.str; S.buffs.str = (S.classId === 'vampire') ? Math.min(10, S.buffs.str + c.str) : S.buffs.str + c.str; const gained2 = S.buffs.str - prevStr2; if (gained2 > 0){ fxBurst('player', '💪'); buffFlash(); spawnText($('battle-area'), '💪 พลัง+' + gained2 + (S.classId === 'vampire' && S.buffs.str >= 10 ? ' (MAX)' : ''), null, 'crit', .15, .4); } }
   if (c.momentum){ S.buffs.momentum += c.momentum; buffFlash(); spawnText($('battle-area'), '🌀 โมเมนตัม+' + c.momentum, null, 'auto', .15, .45); }
   if (c.dfire){ S.buffs.dfire = true; fxBurst('player', '🐉'); buffFlash(); }
   if (c.weakAll){ aliveEnemies().forEach(e => applyDebuff(e, 'weak', c.weakAll)); }
