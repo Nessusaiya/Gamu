@@ -447,6 +447,9 @@
   .overlay.active { display:flex; }
   /* เด็ค/ของสวมใส่ ต้องลอยเหนือปล่องหอ (#tower-map-overlay) เสมอ เพื่อให้กดดูได้ */
   #deck-overlay, #equip-overlay, #status-overlay { z-index:22; }
+  #equip-body::-webkit-scrollbar { width:6px; }
+  #equip-body::-webkit-scrollbar-track { background:transparent; }
+  #equip-body::-webkit-scrollbar-thumb { background:#2a2a2a44; border-radius:4px; }
   /* คู่มือวิธีเล่น: เป็น "หน้าต่าง" ขนาดพอดี เลื่อนเฉพาะเนื้อหาด้านในด้วยล้อเมาส์ */
   #howto-overlay { justify-content:center; align-items:center; }
   .howto-window {
@@ -480,10 +483,14 @@
 
   /* ---- event screen ---- */
   #event-box { text-align:center; padding:24px 18px; max-width:560px; width:100%; }
-  #event-art { width:150px; margin:0 auto 8px; }
-  #event-title { font-family:'Mali',cursive; font-size:1.5rem; margin-bottom:8px; }
-  #event-desc { font-size:1.08rem; line-height:1.7; margin-bottom:16px; min-height:50px; }
+  #event-art { width:150px; margin:0 auto 8px; flex-shrink:0; }
+  #event-title { font-family:'Mali',cursive; font-size:1.5rem; margin-bottom:8px; flex-shrink:0; }
+  #event-desc { font-size:1.08rem; line-height:1.7; margin-bottom:16px; min-height:50px; flex-shrink:0; }
   #event-choices { display:flex; flex-direction:column; gap:10px; align-items:center; }
+  #event-overlay #event-choices { padding-bottom:8px; }
+  #event-overlay #event-choices::-webkit-scrollbar { width:6px; }
+  #event-overlay #event-choices::-webkit-scrollbar-track { background:transparent; }
+  #event-overlay #event-choices::-webkit-scrollbar-thumb { background:#2a2a2a44; border-radius:4px; }
 
   /* ---- end screens ---- */
   .end-screen { text-align:center; padding-top:30px; }
@@ -742,12 +749,12 @@
   </div>
 
   <!-- ================= EVENT OVERLAY ================= -->
-  <div id="event-overlay" class="overlay">
-    <div id="event-box" class="sketch">
-      <div id="event-art"></div>
-      <div id="event-title"></div>
-      <div id="event-desc"></div>
-      <div id="event-choices"></div>
+  <div id="event-overlay" class="overlay" style="justify-content:flex-start; padding-top:20px;">
+    <div id="event-box" class="sketch" style="max-width:560px; width:100%; max-height:calc(100vh - 40px); display:flex; flex-direction:column; overflow:hidden;">
+      <div id="event-art" style="flex:0 0 auto;"></div>
+      <div id="event-title" style="flex:0 0 auto;"></div>
+      <div id="event-desc" style="flex:0 0 auto;"></div>
+      <div id="event-choices" style="flex:1 1 auto; overflow-y:auto; min-height:0; padding-right:4px;"></div>
     </div>
   </div>
 
@@ -808,11 +815,11 @@
   </div>
 
   <!-- ================= 🎽 EQUIPMENT OVERLAY ================= -->
-  <div id="equip-overlay" class="overlay">
-    <h2>🎽 ไอเทมสวมใส่</h2>
-    <div style="font-size:.9rem; opacity:.65; margin:-8px 0 10px;">อาวุธ · เกราะ · เครื่องประดับ — เก็บเฉพาะในรันหอคอยนี้</div>
-    <div id="equip-body" class="sketch" style="max-width:640px; width:100%; padding:14px 18px;"></div>
-    <button class="btn" style="margin-top:14px;" onclick="showOverlay('equip-overlay', false)">ปิด</button>
+  <div id="equip-overlay" class="overlay" style="justify-content:flex-start; padding-top:20px;">
+    <h2 style="flex:0 0 auto;">🎽 ไอเทมสวมใส่</h2>
+    <div style="font-size:.9rem; opacity:.65; margin:-8px 0 10px; flex:0 0 auto;">อาวุธ · เกราะ · เครื่องประดับ — เก็บเฉพาะในรันหอคอยนี้</div>
+    <div id="equip-body" class="sketch" style="max-width:640px; width:100%; padding:14px 18px; overflow-y:auto; max-height:calc(100vh - 180px); flex:1 1 auto;"></div>
+    <button class="btn" style="margin-top:14px; flex:0 0 auto;" onclick="showOverlay('equip-overlay', false)">ปิด</button>
   </div>
 
   <!-- ================= 📅 DAILY CHALLENGES OVERLAY ================= -->
